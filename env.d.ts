@@ -70,6 +70,10 @@ interface Window {
     enableSafeClickThrough: () => Promise<{ success: boolean; error?: string }>;
     restoreInteractiveMode: () => Promise<{ success: boolean; error?: string }>;
     emergencyMouseRecovery: () => Promise<{ success: boolean; error?: string }>;
+    // Window Opacity Control
+    increaseOpacity: () => Promise<{ success: boolean; data?: { opacity: number }; error?: string }>;
+    decreaseOpacity: () => Promise<{ success: boolean; data?: { opacity: number }; error?: string }>;
+    getOpacity: () => Promise<{ success: boolean; data?: { opacity: number }; error?: string }>;
     quitApplication: () => Promise<{ success: boolean; error?: string }>;
     // Mode & history
     getMode: () => Promise<{ success: boolean; data?: { mode: "normal"|"stealth" }; error?: string }>;

@@ -153,26 +153,103 @@ export class ShortcutsHelper {
           mainWindow.webContents.send("toggle-transparency");
         }
       },
+      // Increase opacity - Ctrl/Cmd + Shift + ] (right bracket) - more reliable than =/+
+      "CommandOrControl+Shift+]": () => {
+        console.log("Command/Ctrl + Shift + ] pressed. Increasing opacity...");
+        const mainWindow = this.deps.getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const currentOpacity = mainWindow.getOpacity();
+          const newOpacity = Math.min(1.0, currentOpacity + 0.1);
+          mainWindow.setOpacity(newOpacity);
+          console.log(`[Opacity] Increased to ${newOpacity.toFixed(2)}`);
+        }
+      },
+      // Also try Plus and = for compatibility
+      "CommandOrControl+Shift+Plus": () => {
+        console.log("Command/Ctrl + Shift + Plus pressed. Increasing opacity...");
+        const mainWindow = this.deps.getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const currentOpacity = mainWindow.getOpacity();
+          const newOpacity = Math.min(1.0, currentOpacity + 0.1);
+          mainWindow.setOpacity(newOpacity);
+          console.log(`[Opacity] Increased to ${newOpacity.toFixed(2)}`);
+        }
+      },
+      "CommandOrControl+Shift+=": () => {
+        console.log("Command/Ctrl + Shift + = pressed. Increasing opacity...");
+        const mainWindow = this.deps.getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const currentOpacity = mainWindow.getOpacity();
+          const newOpacity = Math.min(1.0, currentOpacity + 0.1);
+          mainWindow.setOpacity(newOpacity);
+          console.log(`[Opacity] Increased to ${newOpacity.toFixed(2)}`);
+        }
+      },
+      // Decrease opacity - Ctrl/Cmd + Shift + [ (left bracket) - more reliable than -
+      "CommandOrControl+Shift+[": () => {
+        console.log("Command/Ctrl + Shift + [ pressed. Decreasing opacity...");
+        const mainWindow = this.deps.getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const currentOpacity = mainWindow.getOpacity();
+          const newOpacity = Math.max(0.1, currentOpacity - 0.1);
+          mainWindow.setOpacity(newOpacity);
+          console.log(`[Opacity] Decreased to ${newOpacity.toFixed(2)}`);
+        }
+      },
+      // Also try Minus for compatibility
+      "CommandOrControl+Shift+-": () => {
+        console.log("Command/Ctrl + Shift + - pressed. Decreasing opacity...");
+        const mainWindow = this.deps.getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          const currentOpacity = mainWindow.getOpacity();
+          const newOpacity = Math.max(0.1, currentOpacity - 0.1);
+          mainWindow.setOpacity(newOpacity);
+          console.log(`[Opacity] Decreased to ${newOpacity.toFixed(2)}`);
+        }
+      },
     };
   }
 
   private registerAppShortcuts(): void {
+    // Register critical shortcuts first (like Ctrl+R) to avoid conflicts
+    const criticalShortcuts = ["CommandOrControl+R"];
+    const otherShortcuts: Array<[string, () => void]> = [];
+    
+    // Separate critical and other shortcuts
     Object.entries(this.shortcuts).forEach(([key, handler]) => {
-      try {
-        const isRegistered = globalShortcut.isRegistered(key);
-        if (isRegistered) {
-          globalShortcut.unregister(key);
-        }
-        const success = globalShortcut.register(key, handler);
-        if (success) {
-          console.log(`✓ Registered shortcut: ${key}`);
-        } else {
-          console.error(`✗ Failed to register shortcut: ${key} (may be in use by another app)`);
-        }
-      } catch (error) {
-        console.error(`✗ Error registering shortcut ${key}:`, error);
+      if (criticalShortcuts.includes(key)) {
+        // Register critical shortcuts first
+        this.registerSingleShortcut(key, handler, true);
+      } else {
+        otherShortcuts.push([key, handler]);
       }
     });
+    
+    // Register other shortcuts
+    otherShortcuts.forEach(([key, handler]) => {
+      this.registerSingleShortcut(key, handler, false);
+    });
+  }
+
+  private registerSingleShortcut(key: string, handler: () => void, isCritical: boolean): void {
+    try {
+      const isRegistered = globalShortcut.isRegistered(key);
+      if (isRegistered) {
+        globalShortcut.unregister(key);
+      }
+      const success = globalShortcut.register(key, handler);
+      if (success) {
+        console.log(`✓ Registered shortcut: ${key}${isCritical ? ' (critical)' : ''}`);
+      } else {
+        console.error(`✗ Failed to register shortcut: ${key} (may be in use by another app)`);
+        if (isCritical) {
+          console.warn(`[Shortcuts] WARNING: Critical shortcut ${key} failed to register. This may cause functionality issues.`);
+          console.warn(`[Shortcuts] Try closing other applications that might be using this shortcut.`);
+        }
+      }
+    } catch (error) {
+      console.error(`✗ Error registering shortcut ${key}:`, error);
+    }
   }
 
   private unregisterAppShortcuts(): void {

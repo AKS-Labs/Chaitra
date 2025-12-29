@@ -65,7 +65,7 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
   ipcMain.handle("get-api-config", createSafeIpcHandler(async () => {
     try {
       const apiKey = await getStoreValue("api-key");
-      const model = (await getStoreValue("api-model")) || "gemini-2.0-flash";
+      const model = (await getStoreValue("api-model")) || "gemini-3-flash-preview";
 
       if (!apiKey) {
         return { success: false, error: "API key not found" };
@@ -100,9 +100,9 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
       // Validate model format for Gemini
       const validGeminiModels = [
         "gemini-3-pro-preview",
+        "gemini-3-flash-preview",
         "gemini-2.5-pro",
-        "gemini-2.5-flash",
-        "gemini-2.0-flash"
+        "gemini-2.5-flash"
       ];
 
       if (!validGeminiModels.includes(model.trim())) {
@@ -896,6 +896,62 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
       return { success: false, error: error.message || String(error) };
     }
   }, "open-settings"));
+
+  // ============================================================================
+  // Window Opacity Control Handlers
+  // ============================================================================
+  ipcMain.handle("increase-opacity", createSafeIpcHandler(() => {
+    try {
+      const mainWindow = deps.getMainWindow();
+      if (!mainWindow || mainWindow.isDestroyed()) {
+        return { success: false, error: "Main window not available" };
+      }
+
+      const currentOpacity = mainWindow.getOpacity();
+      const newOpacity = Math.min(1.0, currentOpacity + 0.1);
+      mainWindow.setOpacity(newOpacity);
+      
+      console.log(`[Opacity] Increased to ${newOpacity.toFixed(2)}`);
+      return { success: true, data: { opacity: newOpacity } };
+    } catch (error: any) {
+      console.error("Error increasing opacity:", error);
+      return { success: false, error: error.message || String(error) };
+    }
+  }, "increase-opacity"));
+
+  ipcMain.handle("decrease-opacity", createSafeIpcHandler(() => {
+    try {
+      const mainWindow = deps.getMainWindow();
+      if (!mainWindow || mainWindow.isDestroyed()) {
+        return { success: false, error: "Main window not available" };
+      }
+
+      const currentOpacity = mainWindow.getOpacity();
+      const newOpacity = Math.max(0.1, currentOpacity - 0.1);
+      mainWindow.setOpacity(newOpacity);
+      
+      console.log(`[Opacity] Decreased to ${newOpacity.toFixed(2)}`);
+      return { success: true, data: { opacity: newOpacity } };
+    } catch (error: any) {
+      console.error("Error decreasing opacity:", error);
+      return { success: false, error: error.message || String(error) };
+    }
+  }, "decrease-opacity"));
+
+  ipcMain.handle("get-opacity", createSafeIpcHandler(() => {
+    try {
+      const mainWindow = deps.getMainWindow();
+      if (!mainWindow || mainWindow.isDestroyed()) {
+        return { success: false, error: "Main window not available" };
+      }
+
+      const opacity = mainWindow.getOpacity();
+      return { success: true, data: { opacity } };
+    } catch (error: any) {
+      console.error("Error getting opacity:", error);
+      return { success: false, error: error.message || String(error) };
+    }
+  }, "get-opacity"));
 
   console.log("FIXED: All IPC handlers initialized successfully with DIRECT dimension updates (NO BATCHING)");
 }

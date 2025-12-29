@@ -286,6 +286,11 @@ const electronAPI = {
   restoreInteractiveMode: () => ipcRenderer.invoke("restore-interactive-mode"),
   emergencyMouseRecovery: () => ipcRenderer.invoke("emergency-mouse-recovery"),
 
+  // Window Opacity Control
+  increaseOpacity: () => ipcRenderer.invoke("increase-opacity"),
+  decreaseOpacity: () => ipcRenderer.invoke("decrease-opacity"),
+  getOpacity: () => ipcRenderer.invoke("get-opacity"),
+
   // GitHub Update Check methods
   checkGitHubUpdate: () => ipcRenderer.invoke("check-github-update"),
   openUpdateDownload: (url?: string) => ipcRenderer.invoke("open-update-download", url),

@@ -41,6 +41,11 @@ const MODEL_OPTIONS = [
     default: true,
   },
   {
+    id: "gemini-3-flash-preview",
+    name: "Gemini 3 Flash (Preview)",
+    description: "Latest Gemini 3 flash preview model (Google)",
+  },
+  {
     id: "gemini-2.5-pro",
     name: "Gemini 2.5 Pro",
     description: "Advanced reasoning and capabilities (Google)",
@@ -49,11 +54,6 @@ const MODEL_OPTIONS = [
     id: "gemini-2.5-flash",
     name: "Gemini 2.5 Flash",
     description: "Fast and efficient Gemini model (Google)",
-  },
-  {
-    id: "gemini-2.0-flash",
-    name: "Gemini 2.0 Flash",
-    description: "Latest Gemini 2.0 model (Google)",
   },
 ];
 
@@ -131,14 +131,14 @@ export default function Tooltip({ trigger, onVisibilityChange }: TooltipProps) {
       // FIXED: Use real API call to get saved configuration
       const response = await window.electronAPI.getApiConfig();
       console.log("API config response:", response);
-      if (response?.success) {
-        const configData = response.data ?? response;
-        if (configData?.apiKey) {
+      if (response?.success && response.data) {
+        const configData = response.data;
+        if (configData.apiKey) {
           console.log("Setting API key from config");
           setApiKey(configData.apiKey);
         }
-        if (configData?.model) {
-          console.log("Setting model from config:", response.data.model);
+        if (configData.model) {
+          console.log("Setting model from config:", configData.model);
           setSelectedModel(configData.model);
         }
       } else {
@@ -558,7 +558,7 @@ export default function Tooltip({ trigger, onVisibilityChange }: TooltipProps) {
         // FIXED: Ensure tooltip can extend beyond viewport boundaries
         clip: 'auto',
         clipPath: 'none',
-      }}
+      } as React.CSSProperties}
             onMouseEnter={handleTooltipContentMouseEnter}
             onMouseLeave={handleTooltipContentMouseLeave}
             onClick={(e) => e.stopPropagation()}
@@ -885,18 +885,32 @@ export default function Tooltip({ trigger, onVisibilityChange }: TooltipProps) {
                   >Ctrl + R</kbd>
                 </div>
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-white/80">Toggle Mode</span>
-                  <kbd 
-                    className={`px-2 py-1 rounded-md text-white/90 font-mono text-xs ${isTransparent ? '' : 'bg-white/20 border border-white/30'}`}
-                    style={isTransparent ? { background: 'transparent', border: 'none' } : {}}
-                  >Ctrl + Shift + M</kbd>
-                </div>
-                <div className="flex justify-between items-center py-1">
                   <span className="text-white/80">History Navigation</span>
                   <kbd 
                     className={`px-2 py-1 rounded-md text-white/90 font-mono text-xs ${isTransparent ? '' : 'bg-white/20 border border-white/30'}`}
                     style={isTransparent ? { background: 'transparent', border: 'none' } : {}}
                   >Alt + ↑↓</kbd>
+                </div>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-white/80">Toggle Transparency</span>
+                  <kbd 
+                    className={`px-2 py-1 rounded-md text-white/90 font-mono text-xs ${isTransparent ? '' : 'bg-white/20 border border-white/30'}`}
+                    style={isTransparent ? { background: 'transparent', border: 'none' } : {}}
+                  >Ctrl + Shift + V</kbd>
+                </div>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-white/80">Increase Opacity</span>
+                  <kbd 
+                    className={`px-2 py-1 rounded-md text-white/90 font-mono text-xs ${isTransparent ? '' : 'bg-white/20 border border-white/30'}`}
+                    style={isTransparent ? { background: 'transparent', border: 'none' } : {}}
+                  >Ctrl + Shift + ]</kbd>
+                </div>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-white/80">Decrease Opacity</span>
+                  <kbd 
+                    className={`px-2 py-1 rounded-md text-white/90 font-mono text-xs ${isTransparent ? '' : 'bg-white/20 border border-white/30'}`}
+                    style={isTransparent ? { background: 'transparent', border: 'none' } : {}}
+                  >Ctrl + Shift + [</kbd>
                 </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="text-white/80">Quit Application</span>
