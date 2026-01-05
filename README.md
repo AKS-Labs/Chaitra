@@ -1,129 +1,154 @@
 <div align="center">
 
-# PhantomLens Open Source Cluely Alternative
+# PhantomLens  
+### Open-Source Cluely Alternative
 
-## Your Covert AI Weapon.
+**See more. Know faster. Stay invisible.**
 
 [![Download Now](https://img.shields.io/badge/Download%20Now-Available-success?style=for-the-badge&logo=download&logoColor=white&labelColor=2B213A)](https://github.com/inulute/phantom-lens/releases)
 [![Website](https://img.shields.io/badge/Website-Visit-blue?style=for-the-badge&logo=globe&logoColor=white&labelColor=1E88E5)](https://phantomlens.inulute.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows-teal?style=for-the-badge&logo=windows&logoColor=white&labelColor=2C3E50)](https://github.com/inulute/phantom-lens)
 
 
-
-<img src="./public/assets/icons/phantomlens_logo.svg" alt="PhantomLens" width="250px">
+<img src="./public/assets/icons/phantomlens_logo.svg" width="220px" alt="PhantomLens logo"/>
 
 </div>
 
-**The open-source, privacy-focused AI Assistant that works invisibly across your screen**
+---
 
-PhantomLens is an advanced, undetectable AI assistant that helps you with any on-screen task while respecting your privacy. Unlike commercial alternatives, PhantomLens is free, open-source and puts your privacy first.
+## What is PhantomLens?
+
+**PhantomLens** is a privacy-first, open-source AI assistant that operates **silently across your screen**.
+
+It understands what’s on your display, responds contextually, and stays out of sight — no overlays, no interruptions, no telemetry abuse.
+
+Built for people who value **speed, discretion, and control**.
+
+---
+
+## Why PhantomLens?
+
+Most AI tools are loud.  
+Some are expensive.  
+Almost all watch you back.
+
+**PhantomLens doesn’t.**
+
+- No subscriptions  
+- No accounts  
+- No hidden uploads  
+- No lock-in  
+
+Just a tool that does its job — quietly.
+
+---
+
+## ✨ Core Capabilities
+
+- **Invisible by Design**  
+  Lives off-screen. Appears only when summoned. Leaves no trace.
+
+- **Context-Aware Intelligence**  
+  Understands what app you’re using and adapts responses accordingly.
+
+- **Privacy Comes First**  
+  No forced cloud syncs. No silent data harvesting.
+
+- **Open Source**  
+  Every line is auditable.
+
+---
+
+## ⌨️ Keyboard-Driven Workflow
+
+### Global
+| Shortcut | Action |
+|--------|-------|
+| `Ctrl + \` | Toggle PhantomLens |
+
+### When Visible
+| Shortcut | Action |
+|--------|-------|
+| `Ctrl + Enter` | Capture screen & analyze |
+| `Ctrl + R` | Cancel current task |
+| `Ctrl + ← → ↑ ↓` | Move window |
+| `Alt + ↑ ↓` | Scroll content |
+| `Alt + ← →` | Scroll code blocks |
+| `Ctrl + Shift + ↑ ↓` | Navigate history |
+| `Ctrl + ,` | Open settings |
+| `Ctrl + Shift + ,` | Interactive settings |
+| `Ctrl + Shift + V` | Transparent mode |
+| `Ctrl + Shift + R` | Emergency recovery |
+| `Ctrl + Q` | Quit |
+
+> Tip: PhantomLens can be toggled even while hidden.  
+> No task switching. No attention break.
+
+
+---
 
 ## 📥 Download
 
-PhantomLens is now available for download! Get the latest version for Windows:
+PhantomLens is currently available for **Windows**.
 
-**[Download from GitHub Releases →](https://github.com/inulute/phantom-lens/releases)**
+👉 **[Download latest release](https://github.com/inulute/phantom-lens/releases)**
 
-> **Note:** Currently, PhantomLens is available for Windows only. macOS and Linux versions are coming soon!
+macOS & Linux builds are planned.
 
-## 🌟 Features
-
-- **Truly Invisible**: Operates like a master thief - acquiring knowledge without leaving a trace in iykyk....
-- **Context-Aware**: Sees what application you're using and tailors responses accordingly.
-- **Open Source**: Transparent codebase you can inspect, modify, and trust
-
-## ⌨️ Keyboard Shortcuts
-
-PhantomLens comes with powerful keyboard shortcuts to help you work efficiently. Here are the available shortcuts:
-
-### Global Shortcuts (Work anywhere)
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl + \` | Show/Hide PhantomLens window |
-
-### Application Shortcuts (When window is visible)
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl + Enter` | Take screenshot and process |
-| `Ctrl + R` | Reset/Cancel current operation |
-| `Ctrl + ←→↑↓` | Move window (left, right, up, down) |
-| `Alt + ↑↓` | Scroll response content |
-| `Alt + ←→` | Scroll code blocks |
-| `Ctrl + Shift + ↑↓` | Navigate history (previous/next) |
-| `Ctrl + ,` | Open settings |
-| `Ctrl + Shift + ,` | Enable interactive settings mode |
-| `Ctrl + Q` | Quit application |
-| `Ctrl + Shift + R` | Emergency window recovery |
-| `Ctrl + Shift + V` | Transparent mode |
-
-> **Tip:** The global shortcut `Ctrl + \` works from anywhere on your system, even when PhantomLens is hidden. Use it to quickly toggle the window visibility!
-
-## 🔄 How PhantomLens Differs from Cluely
-
-|                       | PhantomLens | Others |
-|-----------------------|---------|--------|
-| **Privacy**           | ✅ Fully private, data stays local | ❌ Sends data to their servers |
-| **Price**             | ✅ Free and open-source | ❌ Subscription-based |
-| **Transparency**      | ✅ Open codebase | ❌ Closed source |
-| **Customization**     | ✅ Fully customizable | ❌ Limited options |
-| **Data Ownership**    | ✅ You own your data | ❌ Data used for training |
-
-
+---
 
 ## ⚠️ Ethical Use
 
+> PhantomLens is a general-purpose assistant.  
+> Use it responsibly and in compliance with applicable rules, policies, and laws.
 
->[!NOTE]
->PhantomLens is intended for ethical use only. We do not condone cheating or any form of academic dishonesty. Use this tool responsibly and in accordance with your institution's guidelines. inulute is not responsible for any misuse of this software.
+The developers are not responsible for misuse.
 
-## 💎 SUPPORT THE PROJECT
+---
+
+## 💎 Support the Project
 
 <div align="center">
-
-  
   <a href="https://support.inulute.com">
-    <img src="https://img.shields.io/badge/SUPPORT_INULUTE-teal?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1zcGFya2xlcyI+PHBhdGggZD0iTTEyIDJ2MiIvPjxwYXRoIGQ9Ik0xMiAyMHYyIi8+PHBhdGggZD0iTTQuOTMgNC45M2wxLjQxIDEuNDEiLz48cGF0aCBkPSJNMTcuNjYgMTcuNjZsMS40MSAxLjQxIi8+PHBhdGggZD0iTTIgMTJoMiIvPjxwYXRoIGQ9Ik0yMCAxMmgyIi8+PHBhdGggZD0iTTYuMzQgMTcuNjZsLTEuNDEgMS40MSIvPjxwYXRoIGQ9Ik0xOS4wNyA0LjkzbC0xLjQxIDEuNDEiLz48L3N2Zz4=" alt="Support inulute" width="200" height="45px">
+    <img src="https://img.shields.io/badge/Support%20Inulute-Teal?style=for-the-badge"/>
   </a>
-
 </div>
 
 ---
 
-## 🔍 SEE BEYOND. KNOW MORE.
+## 🕶️ Philosophy
 
-PhantomLens works like a master knowledge thief - stealthily acquiring valuable information and delivering it to you without leaving a trace. Whether in meetings, interviews, or high-stakes conversations, get the right information at the right moment - completely hidden from everyone else.
+PhantomLens is built around a simple idea:
+
+> **The best tools don’t demand attention. They amplify it.**
+
+Assignments. Exams. Problem-solving under pressure.
+When timing matters, PhantomLens stays quiet and ready.
 
 ---
 
-## 🌐 CONNECT
+## 🌐 Stay Connected
 
 <div align="center">
   <a href="https://socials.inulute.com">
-    <img src="https://img.shields.io/badge/ALL_SOCIALS-000000?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGZmZmYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSIxOCIgY3k9IjUiIHI9IjMiLz48Y2lyY2xlIGN4PSI2IiBjeT0iMTIiIHI9IjMiLz48Y2lyY2xlIGN4PSIxOCIgY3k9IjE5IiByPSIzIi8+PGxpbmUgeDE9IjguNTkiIHkxPSIxMy41MSIgeDI9IjE1LjQyIiB5Mj0iMTcuNDkiLz48bGluZSB4MT0iMTUuNDEiIHkxPSI2LjUxIiB4Mj0iOC41OSIgeTI9IjEwLjQ5Ii8+PC9zdmc+" alt="All Socials" width="200">
+    <img src="https://img.shields.io/badge/All%20Socials-000000?style=for-the-badge"/>
   </a>
-
-  <p>Stay updated with the latest features and phantom knowledge.</p>
-
+  <p>Follow for updates, releases, and new capabilities.</p>
 </div>
 
 ---
 
-## 🙏 Acknowledgments
+## Credits
 
-Built with the initial codebase from [Jaden Park](https://github.com/jadenpxrk).
+Initial codebase inspired by  
+**Jaden Park** — https://github.com/jadenpxrk
 
 ---
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/inulute/perplexity-ai-app/main/assets/icons/svg/inulute.svg" alt="Inulute" width="70px">
-
+  <img src="https://raw.githubusercontent.com/inulute/perplexity-ai-app/main/assets/icons/svg/inulute.svg" width="70px"/>
 </div>
 
-  <a href="https://github.com/inulute/phantom-lens">
-    <img src="https://komarev.com/ghpvc/?username=inulute&repo=phantom-lens&label=Repo%20Views&color=olive&style=pixel&logo=github&abbreviated=true" alt="phantom-lens views" />
-  </a>
-
----
-
+<div align="center">
+  <img src="https://komarev.com/ghpvc/?username=inulute&repo=phantom-lens&label=Repo%20Views&color=olive&style=pixel&abbreviated=true"/>
+</div>
