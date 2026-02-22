@@ -1,8 +1,11 @@
 import { BrowserWindow, app } from "electron";
-import { ChildProcess, spawn } from "child_process";
+import { ChildProcess, spawn, exec } from "child_process";
+import { promisify } from "util";
 
 import fs from "fs";
 import path from "path";
+
+const execAsync = promisify(exec);
 
 export class ScreenCaptureHelper {
   private swiftHelperProcess: ChildProcess | null = null;
@@ -49,6 +52,10 @@ export class ScreenCaptureHelper {
   public async startScreenCaptureProtection(
     mainWindow: BrowserWindow
   ): Promise<boolean> {
+    if (process.platform === "linux") {
+      return this.startLinuxScreenCaptureProtection(mainWindow);
+    }
+
     if (process.platform !== "darwin") {
       console.log("ScreenCaptureKit protection only available on macOS");
       return false;
@@ -125,10 +132,90 @@ export class ScreenCaptureHelper {
   }
 
   /**
+   * Start screen capture protection on Linux using xdotool/xprop
+   * Sets window properties to hint compositors to exclude it from capture
+   */
+  private async startLinuxScreenCaptureProtection(
+    mainWindow: BrowserWindow
+  ): Promise<boolean> {
+    if (this.isHelperRunning) {
+      console.log("Linux screen capture protection already running");
+      return true;
+    }
+
+    try {
+      // Get the native window handle (X11 window ID)
+      const windowId = mainWindow.getNativeWindowHandle().readUInt32LE(0);
+      const hexWindowId = `0x${windowId.toString(16)}`;
+
+      console.log(
+        `Starting Linux screen capture protection for window: ${hexWindowId}`
+      );
+
+      // Attempt to set window properties that exclude it from screenshots
+      // 1. Set _NET_WM_BYPASS_COMPOSITOR to hint compositors
+      // 2. Set window type to utility/popup to reduce capture visibility
+      const commands = [
+        // Try to exclude from compositor capture
+        `xprop -id ${hexWindowId} -f _NET_WM_BYPASS_COMPOSITOR 32c -set _NET_WM_BYPASS_COMPOSITOR 1`,
+        // Set window to not appear in taskbar/pager (already handled by Electron, but reinforce)
+        `xprop -id ${hexWindowId} -f _NET_WM_STATE 32a -set _NET_WM_STATE _NET_WM_STATE_SKIP_TASKBAR,_NET_WM_STATE_SKIP_PAGER`,
+      ];
+
+      let anySuccess = false;
+      for (const cmd of commands) {
+        try {
+          await execAsync(cmd);
+          anySuccess = true;
+        } catch {
+          // xprop may not be available or the property may not be supported
+          console.warn(`[Linux CaptureProtection] Command failed: ${cmd}`);
+        }
+      }
+
+      if (anySuccess) {
+        this.isHelperRunning = true;
+        console.log(
+          "Linux screen capture protection applied (best-effort via X11 properties)"
+        );
+        return true;
+      } else {
+        console.warn(
+          "Linux screen capture protection: xprop not available. " +
+            "Install xprop (x11-utils) for best-effort capture protection."
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error(
+        "Failed to start Linux screen capture protection:",
+        error
+      );
+      return false;
+    }
+  }
+
+  /**
    * Stop the Swift helper
    */
   public async stopScreenCaptureProtection(): Promise<void> {
-    if (!this.isHelperRunning || !this.swiftHelperProcess) {
+    if (!this.isHelperRunning) {
+      if (process.platform === "linux") {
+        // Linux protection is property-based, just reset the flag
+        this.isHelperRunning = false;
+        console.log("Linux screen capture protection stopped");
+      }
+      return;
+    }
+
+    if (process.platform === "linux") {
+      // Linux protection is X11 property-based, no process to stop
+      this.cleanup();
+      console.log("Linux screen capture protection stopped");
+      return;
+    }
+
+    if (!this.swiftHelperProcess) {
       return;
     }
 

@@ -285,9 +285,11 @@ export class ShortcutsHelper {
 
     // Try registering the backslash shortcut with proper escaping
     // On Windows, backslash might need different handling
-    const shortcutKey = process.platform === "win32" 
+    const shortcutKey = process.platform === "win32"
       ? "Control+\\"  // Windows format
-      : "CommandOrControl+\\";  // macOS/Linux format
+      : process.platform === "linux"
+      ? "Control+\\"  // Linux format (uses Control, not Command)
+      : "CommandOrControl+\\";  // macOS format
 
     try {
       // Unregister first if already registered

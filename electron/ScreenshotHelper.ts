@@ -230,6 +230,47 @@ export class ScreenshotHelper {
     }, "Windows screenshot capture");
   }
 
+  private async captureScreenshotLinux(): Promise<Buffer> {
+    return this.safeFileOperation(async () => {
+      const tmpPath = path.join(app.getPath("temp"), `${uuidv4()}.png`);
+
+      // Try multiple screenshot tools in order of preference
+      const tools = [
+        { cmd: "gnome-screenshot", args: ["-f", tmpPath] },
+        { cmd: "scrot", args: [tmpPath] },
+        { cmd: "spectacle", args: ["-b", "-n", "-o", tmpPath] },
+        { cmd: "import", args: ["-window", "root", tmpPath] }, // ImageMagick
+        { cmd: "xdg-screencapture", args: [tmpPath] },
+      ];
+
+      let captured = false;
+      for (const tool of tools) {
+        try {
+          await execFileAsync(tool.cmd, tool.args);
+          // Verify the file was actually created
+          if (fs.existsSync(tmpPath)) {
+            captured = true;
+            console.log(`Linux screenshot captured using: ${tool.cmd}`);
+            break;
+          }
+        } catch {
+          // Tool not available or failed, try next one
+          continue;
+        }
+      }
+
+      if (!captured) {
+        throw new Error(
+          "No screenshot tool available on Linux. Please install one of: gnome-screenshot, scrot, spectacle, or imagemagick (import)."
+        );
+      }
+
+      const buffer = await fs.promises.readFile(tmpPath);
+      await fs.promises.unlink(tmpPath);
+      return buffer;
+    }, "Linux screenshot capture");
+  }
+
   // ============================================================================
   // BUG FIX: Thread-Safe Screenshot Capture with Comprehensive Error Handling
   // ============================================================================
@@ -250,9 +291,13 @@ export class ScreenshotHelper {
       let screenshotBuffer: Buffer;
       
       try {
-        screenshotBuffer = process.platform === "darwin"
-          ? await this.captureScreenshotMac()
-          : await this.captureScreenshotWindows();
+        if (process.platform === "darwin") {
+          screenshotBuffer = await this.captureScreenshotMac();
+        } else if (process.platform === "linux") {
+          screenshotBuffer = await this.captureScreenshotLinux();
+        } else {
+          screenshotBuffer = await this.captureScreenshotWindows();
+        }
       } catch (captureError) {
         console.error("Screenshot capture failed:", captureError);
         throw new Error(`Screenshot capture failed: ${captureError}`);

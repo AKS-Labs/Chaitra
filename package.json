@@ -24,7 +24,8 @@
     "release:draft": "cross-env NODE_ENV=production rimraf dist dist-electron && npm run build:swift:check && vite build && tsc -p tsconfig.electron.json && electron-builder --publish=onTagOrDraft",
     "package": "npm run build && electron-builder build",
     "package-mac": "npm run build && electron-builder build --mac",
-    "package-win": "npm run build && electron-builder build --win"
+    "package-win": "npm run build && electron-builder build --win",
+    "package-linux": "npm run build && electron-builder build --linux"
   },
   "build": {
     "appId": "com.inulute.phantomlens",
