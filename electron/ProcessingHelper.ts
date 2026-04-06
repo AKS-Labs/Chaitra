@@ -924,7 +924,11 @@ export class ProcessingHelper {
     } catch (error: any) {
       const mainWindow = this.deps.getMainWindow();
       
-      if (error.message === "Request aborted" || error.name === "AbortError") {
+      if (error.message === "API key not configured") {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send("api-key-missing");
+        }
+      } else if (error.message === "Request aborted" || error.name === "AbortError") {
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send(
             this.deps.PROCESSING_EVENTS.INITIAL_RESPONSE_ERROR,

@@ -26,9 +26,12 @@ export default function Chat({ setView }: ChatProps) {
   const [error, setError] = useState<string | null>(null);
   const [showApiKeyPrompt, setShowApiKeyPrompt] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
-  const [expandedShortcuts, setExpandedShortcuts] = useState(false);
+  const [transparencyMode, setTransparencyMode] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const [isCommandsExpanded, setIsCommandsExpanded] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = useCallback(() => {
@@ -136,7 +139,7 @@ export default function Chat({ setView }: ChatProps) {
     try {
       const result = await window.electronAPI.setApiConfig?.({
         apiKey: apiKeyInput,
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
       });
       if (result?.success) {
         setApiKeyInput("");
@@ -168,16 +171,16 @@ export default function Chat({ setView }: ChatProps) {
             Ctrl+\ (Toggle) • Ctrl+Shift+S (Capture) • Ctrl+, (Settings)
           </div>
           <button
-            onClick={() => setExpandedShortcuts(!expandedShortcuts)}
+            onClick={() => setIsCommandsExpanded(!isCommandsExpanded)}
             className="ml-2 px-2 py-1 text-xs bg-white/10 hover:bg-white/20 rounded text-white transition-colors"
           >
-            {expandedShortcuts ? '▼ Hide' : '▶ More'}
+            {isCommandsExpanded ? '▼ Hide' : '▶ More'}
           </button>
         </div>
         
         {/* Expanded Commands Bar */}
         <AnimatePresence>
-          {expandedShortcuts && (
+          {isCommandsExpanded && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -232,7 +235,10 @@ export default function Chat({ setView }: ChatProps) {
                   }}
                 >
                   {message.role === 'assistant' ? (
-                    <MarkdownSection content={message.content} />
+                    <MarkdownSection 
+                      content={message.content} 
+                      isLoading={isLoading && message.id === messages[messages.length - 1]?.id}
+                    />
                   ) : (
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   )}
@@ -343,22 +349,43 @@ export default function Chat({ setView }: ChatProps) {
               WebkitUserSelect: 'text'
             } as React.CSSProperties}
           />
-          <Button
+          <button
             onClick={sendMessage}
             disabled={isLoading || !inputValue.trim() || showApiKeyPrompt}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 h-fit"
+            className="flex items-center justify-center px-3 py-2 text-white/60 hover:text-white/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            title="Send (Enter)"
           >
-            Send
-          </Button>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </button>
         </div>
         {error && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-xs text-red-400"
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-2 rounded-lg text-xs flex items-center justify-between gap-2"
           >
-            {error}
-          </motion.p>
+            <span>API Error: Unable to process message. Please try again.</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(error);
+              }}
+              className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs whitespace-nowrap"
+            >
+              Copy Error
+            </button>
+          </motion.div>
         )}
       </div>
     </div>

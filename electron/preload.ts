@@ -26,7 +26,7 @@ interface ElectronAPI {
   onResponseError: (callback: (error: string) => void) => () => void;
   onResponseSuccess: (callback: (data: any) => void) => () => void;
   onFollowUpError: (callback: (error: string) => void) => () => void;
-  onResponseChunk: (callback: (chunk: string) => void) => () => void;
+  onResponseChunk: (callback: (data: { response: string }) => void) => () => void;
   onResponseComplete: (callback: () => void) => () => void;
   onFollowUpChunk: (callback: (data: { response: string }) => void) => () => void;
   // shortcuts
@@ -330,8 +330,8 @@ const electronAPI = {
   },
   setUserPrompt: (prompt: string) => ipcRenderer.invoke("set-user-prompt", prompt),
   getUserPrompt: () => ipcRenderer.invoke("get-user-prompt"),
-  onResponseChunk: (callback: (chunk: string) => void) => {
-    const subscription = (_: any, chunk: string) => callback(chunk);
+  onResponseChunk: (callback: (data: { response: string }) => void) => {
+    const subscription = (_: any, data: { response: string }) => callback(data);
     ipcRenderer.on(PROCESSING_EVENTS.RESPONSE_CHUNK, subscription);
     return () => {
       ipcRenderer.removeListener(

@@ -27,7 +27,8 @@ interface Window {
     onResponseError: (callback: (error: string) => void) => () => void;
     onResponseSuccess: (callback: (data: any) => void) => () => void;
     onFollowUpError: (callback: (error: string) => void) => () => void;
-    onResponseChunk: (callback: (chunk: string) => void) => () => void;
+    onResponseChunk: (callback: (data: { response: string }) => void) => () => void;
+    onResponseComplete: (callback: () => void) => () => void;
     onFollowUpChunk: (callback: (data: { response: string }) => void) => () => void;
     // shortcuts
     toggleMainWindow: () => Promise<{ success: boolean; error?: string }>;
@@ -37,6 +38,7 @@ interface Window {
     processScreenshots: () => Promise<{ success: boolean; error?: string }>;
     triggerProcessScreenshots: () => Promise<{ success: boolean; error?: string }>;
     processFollowUp: () => Promise<{ success: boolean; error?: string }>;
+    sendChatMessage: (message: string) => Promise<{ success: boolean; error?: string }>;
     // movement
     triggerMoveLeft: () => Promise<{ success: boolean; error?: string }>;
     triggerMoveRight: () => Promise<{ success: boolean; error?: string }>;
