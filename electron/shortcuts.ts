@@ -10,17 +10,17 @@ export class ShortcutsHelper {
 
     // Define all shortcuts and their handlers with NO CONFLICTS
     this.shortcuts = {
-      "CommandOrControl+Enter": async () => {
-        // Always stealth mode - just process screenshots
+      // NEW: Capture screenshot and analyze - Ctrl/Cmd + Shift + S
+      "CommandOrControl+Shift+S": async () => {
+        console.log("Command/Ctrl + Shift + S pressed. Capturing and analyzing screenshot...");
         await this.deps.takeScreenshot();
         await this.deps.processingHelper?.processScreenshots();
       },
       "CommandOrControl+R": () => {
-        console.log("Command + R pressed. Canceling requests and resetting queues...");
+        console.log("Command + R pressed. Canceling requests and resetting...");
         this.deps.processingHelper?.cancelOngoingRequests();
         this.deps.clearQueues();
         console.log("Cleared queues.");
-        this.deps.setView("initial");
         const mainWindow = this.deps.getMainWindow();
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send("reset-view");
@@ -114,13 +114,6 @@ export class ShortcutsHelper {
       "Alt+Right": () => {
         this.deps.scrollCodeBlockBy(120);
       },
-      // History navigation (prev/next) - Ctrl/Cmd + Shift + Up/Down
-      "CommandOrControl+Shift+Up": () => {
-        this.deps.navigateHistoryPrev();
-      },
-      "CommandOrControl+Shift+Down": () => {
-        this.deps.navigateHistoryNext();
-      },
       // Toggle Settings window (open/close)
       "CommandOrControl+,": () => {
         console.log("Command/Ctrl + , pressed. Toggling settings...");
@@ -145,7 +138,7 @@ export class ShortcutsHelper {
           mainWindow.webContents.send("settings-unlock");
         }
       },
-      // Toggle transparency mode - Ctrl/Cmd + Shift + V
+      // Toggle transparency mode - Ctrl/Cmd + Shift + V only (Ctrl+V reserved for paste)
       "CommandOrControl+Shift+V": () => {
         console.log("Command/Ctrl + Shift + V pressed. Toggling transparency mode...");
         const mainWindow = this.deps.getMainWindow();

@@ -63,7 +63,7 @@ async function sendIncrementToServer(endpoint: string): Promise<void> {
       const response = await fetch(finalUrl, {
         method: "GET",
         headers: {
-          "User-Agent": "PhantomLens/1.0",
+          "User-Agent": "Chaitra/1.0",
         },
         signal: controller.signal,
       });

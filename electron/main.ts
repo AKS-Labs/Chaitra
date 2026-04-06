@@ -59,62 +59,17 @@ function showWindowWithoutFocus(): void {
   if (!state.mainWindow || state.mainWindow.isDestroyed()) return;
   
   try {
-    // CRITICAL: Set window to non-focusable BEFORE showing to prevent focus stealing
-    const shouldBeInert = state.mode === "stealth" || 
-                         state.view === "response" || 
-                         state.view === "followup";
-    const overrideActive = isInteractiveOverrideEnabled();
+    // Chat app: always make the window interactive and focusable
+    // The user needs to interact with the chat interface
+    state.mainWindow.setFocusable(true);
+    state.mainWindow.setIgnoreMouseEvents(false);
+    state.mainWindow.setSkipTaskbar(false);
     
-    if (shouldBeInert && !overrideActive) {
-      // Set to non-focusable and skip taskbar MANY times BEFORE showing
-      // This prevents taskbar from appearing even for milliseconds
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setFocusable(false);
-      state.mainWindow.setFocusable(false);
-      state.mainWindow.setFocusable(false);
-      state.mainWindow.setFocusable(false);
-      state.mainWindow.setIgnoreMouseEvents(true);
-    }
-    
-    // Use showInactive on macOS, or ensure focusable is false before showing on Windows
+    // Use showInactive on macOS to not steal focus, show on Windows
     if (process.platform === "darwin") {
       state.mainWindow.showInactive();
     } else {
-      // On Windows, ensure focusable is false before showing
-      if (!overrideActive) {
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setFocusable(false);
-      }
       state.mainWindow.show();
-      
-      // CRITICAL: Immediately after show(), set skipTaskbar again synchronously
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setSkipTaskbar(true);
-      if (!overrideActive) {
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setFocusable(false);
-      }
-      
-      // Immediately blur if it somehow got focus
-      if (state.mainWindow.isFocused()) {
-        state.mainWindow.blur();
-      }
-      
-      // Use process.nextTick to set skipTaskbar before event loop continues
-      process.nextTick(() => {
-        if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-          state.mainWindow.setSkipTaskbar(true);
-          state.mainWindow.setSkipTaskbar(true);
-          if (!overrideActive) {
-            state.mainWindow.setFocusable(false);
-          }
-        }
-      });
     }
     
     // Re-apply interactivity state after showing
@@ -150,7 +105,7 @@ async function initializeStore() {
         ? path.join(process.env.HOME || "", "Library", "Application Support")
         : path.join(process.env.HOME || "", ".config"));
 
-    const configPath = path.join(userDataPath, "phantomlens", "config.json");
+    const configPath = path.join(userDataPath, "Chaitra", "config.json");
 
     store = {
       _configPath: configPath,
@@ -1130,6 +1085,9 @@ function createWindow(): BrowserWindow {
   // CRITICAL: Apply interactivity state BEFORE showing window
   applyInteractivityState();
   
+  // Enable interactive override for chat functionality while keeping stealth mode
+  enableInteractiveOverride();
+  
   // Now show the window without stealing focus
   showWindowWithoutFocus();
   state.mainWindow.setOpacity(1);
@@ -1344,7 +1302,8 @@ async function loadEnvVariables() {
 async function initializeApp() {
   try {
     await initializeStore();
-    // Always start in stealth mode
+    // Always start in stealth mode for undetectable operation
+    // Interactive override will be enabled automatically for chat interaction
     state.mode = "stealth";
     try { Menu.setApplicationMenu(null); } catch {}
     await loadEnvVariables();

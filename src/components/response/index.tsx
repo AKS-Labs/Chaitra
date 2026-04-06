@@ -6,7 +6,7 @@ import Commands from "@/components/Commands";
 import { MarkdownSection } from "@/components/shared/MarkdownSection";
 import { Screenshot } from "@/types/screenshots";
 import { fetchScreenshots } from "@/utils/screenshots";
-import phantomlensLogo from "../../../assets/icons/phantomlens_logo.svg";
+import ChaitraLogo from "../../../assets/icons/phantomlens_logo.svg";
 
 // Hook to track transparency mode
 function useTransparencyMode() {
@@ -443,8 +443,8 @@ export default function Response({ setView }: ResponseProps) {
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
                   <img
-                    src={phantomlensLogo}
-                    alt="PhantomLens"
+                    src={ChaitraLogo}
+                    alt="Chaitra"
                     className="w-8 h-8"
                     style={{
                       opacity: isTransparent ? 0.4 : 1,

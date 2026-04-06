@@ -2,7 +2,7 @@ import { BackslashIcon, EnterIcon } from "./icons";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings } from "lucide-react";
-import phantomlensLogo from "../../assets/icons/phantomlens_logo.svg";
+import ChaitraLogo from "../../assets/icons/phantomlens_logo.svg";
 
 import { COMMAND_KEY } from "../utils/platform";
 import Tooltip from "./shared/Tooltip";
@@ -183,9 +183,13 @@ export default function Commands({
   return (
     <div 
       className="select-none"
-        style={{
-          pointerEvents: 'none', // Always pass-through (stealth mode only)
-        }}
+      style={{
+        pointerEvents: 'auto', // Allow mouse events for full interactivity
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        window.electronAPI.setInteractiveMouseEvents?.().catch(() => {});
+      }}
     >
       <motion.div
         className={`pt-1.5 commands-container ${isMinimal ? 'minimal-content' : ''}`}
@@ -193,7 +197,7 @@ export default function Commands({
         initial="initial"
         animate="animate"
         style={{
-          pointerEvents: 'none', // Always pass-through (stealth mode only)
+          pointerEvents: 'auto', // Allow mouse events for full interactivity
           width: '100%',
           maxWidth: '100%',
         }}
@@ -211,7 +215,11 @@ export default function Commands({
             maxWidth: '100%',
             borderRadius: '9000px',
             fontFamily: "'Helvetica Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-            pointerEvents: 'none', // Always pass-through (stealth mode only)
+            pointerEvents: 'auto', // Allow mouse events to pass through and enable interactive
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            window.electronAPI.setInteractiveMouseEvents?.().catch(() => {});
           }}
         >
           {/* Enhanced main background */}
@@ -287,11 +295,11 @@ export default function Commands({
             />
           )}
 
-          {/* PhantomLens logo - no container, just the logo */}
+          {/* Chaitra logo - no container, just the logo */}
           <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center">
             <img 
-              src={phantomlensLogo} 
-              alt="PhantomLens" 
+              src={ChaitraLogo} 
+              alt="Chaitra" 
               className="w-full h-full object-contain"
               style={{
                 opacity: isTransparent ? 0.4 : 1,
@@ -556,7 +564,7 @@ export default function Commands({
               transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="mt-2"
               style={{
-                pointerEvents: 'none', // Always pass-through (stealth mode only)
+                pointerEvents: 'auto', // Allow mouse events for full interactivity
               }}
             >
               <div
@@ -572,7 +580,7 @@ export default function Commands({
                   maxWidth: '100%',
                   borderRadius: '9000px',
                   fontFamily: "'Helvetica Neue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-                  pointerEvents: 'none', // Always pass-through (stealth mode only)
+                  pointerEvents: 'auto', // Allow mouse events for full interactivity
                 }}
               >
                 {/* Background */}

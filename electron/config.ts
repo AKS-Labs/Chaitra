@@ -21,13 +21,13 @@ class SecureConfig {
   private config: AppConfig;
 
   constructor() {
-    // Use phantomlens instead of ikiag for config directory
+    // Use Chaitra instead of ikiag for config directory
     const userDataPath = process.env.APPDATA ||
       (process.platform === "darwin"
         ? path.join(process.env.HOME || "", "Library", "Application Support")
         : path.join(process.env.HOME || "", ".config"));
 
-    this.configPath = path.join(userDataPath, "phantomlens", "config.json");
+    this.configPath = path.join(userDataPath, "Chaitra", "config.json");
     this.config = this.getDefaultConfig();
     this.loadConfig();
   }
@@ -40,7 +40,7 @@ class SecureConfig {
         private: false
       },
       app: {
-        name: "PhantomLens",
+        name: "Chaitra",
         configDir: path.dirname(this.configPath)
       }
     };

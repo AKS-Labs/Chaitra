@@ -27,6 +27,7 @@ interface ElectronAPI {
   onResponseSuccess: (callback: (data: any) => void) => () => void;
   onFollowUpError: (callback: (error: string) => void) => () => void;
   onResponseChunk: (callback: (chunk: string) => void) => () => void;
+  onResponseComplete: (callback: () => void) => () => void;
   onFollowUpChunk: (callback: (data: { response: string }) => void) => () => void;
   // shortcuts
   toggleMainWindow: () => Promise<{ success: boolean; error?: string }>;
@@ -36,6 +37,7 @@ interface ElectronAPI {
   processScreenshots: () => Promise<{ success: boolean; error?: string }>;
   triggerProcessScreenshots: () => Promise<{ success: boolean; error?: string }>;
   processFollowUp: () => Promise<{ success: boolean; error?: string }>;
+  sendChatMessage: (message: string) => Promise<{ success: boolean; error?: string }>;
   // movement
   triggerMoveLeft: () => Promise<{ success: boolean; error?: string }>;
   triggerMoveRight: () => Promise<{ success: boolean; error?: string }>;
@@ -338,6 +340,17 @@ const electronAPI = {
       );
     };
   },
+  onResponseComplete: (callback: () => void) => {
+    const subscription = () => callback();
+    ipcRenderer.on(PROCESSING_EVENTS.RESPONSE_SUCCESS, subscription);
+    return () => {
+      ipcRenderer.removeListener(
+        PROCESSING_EVENTS.RESPONSE_SUCCESS,
+        subscription
+      );
+    };
+  },
+  sendChatMessage: (message: string) => ipcRenderer.invoke("send-chat-message", message),
   onOpenSettings: (callback: () => void) => {
     const subscription = () => callback();
     ipcRenderer.on("open-settings", subscription);

@@ -148,7 +148,7 @@ class UpdateService {
     try {
       const headers: HeadersInit = {
         'Accept': 'application/vnd.github.v3+json',
-        'User-Agent': 'PhantomLens-Updater'
+        'User-Agent': 'Chaitra-Updater'
       };
       
       // Add token if available (for private repos or to avoid rate limits)
@@ -203,7 +203,7 @@ class UpdateService {
       const response = await fetch(releaseNotesUrl, {
         headers: {
           'Accept': 'text/plain',
-          'User-Agent': 'PhantomLens-Updater'
+          'User-Agent': 'Chaitra-Updater'
         }
       });
 

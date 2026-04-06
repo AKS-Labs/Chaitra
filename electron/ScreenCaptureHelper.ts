@@ -69,7 +69,7 @@ export class ScreenCaptureHelper {
     try {
       // Get the process ID and window title
       const pid = process.pid;
-      const windowTitle = mainWindow.getTitle() || "PhantomLens";
+      const windowTitle = mainWindow.getTitle() || "Chaitra";
 
       console.log(
         `Starting ScreenCaptureKit protection for PID: ${pid}, Window: "${windowTitle}"`

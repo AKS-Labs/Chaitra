@@ -446,17 +446,16 @@ export class ProcessingHelper {
         `Your response MUST follow this structure, using Markdown headings:`,
         ``,
         `# Analysis`,
-        `If audio is provided, briefly reference what you hear and how it relates to the visual content. Keep this extremely brief and focus on your solution approach. One or two sentences maximum.`,
+        `Analyze the visual content provided. Keep this brief and focus on your solution approach.`,
         ``,
         `# Solution`,
-        `Provide the direct solution based on both visual and audio content. Use standard Markdown. If code is necessary, use appropriate code blocks. Do not describe the task itself.`,
+        `Provide the direct solution based on the visual content. Use standard Markdown. If code is necessary, use appropriate code blocks. Do not describe the task itself.`,
         `IMPORTANT: When adding code blocks, use triple backticks WITH the language specifier. Use \`\`\`language\\ncode here\\n\`\`\`.`,
         ``,
         `# Summary`,
-        `Provide only 1-2 sentences focusing on implementation details. Mention if audio context influenced the solution. No conclusions or verbose explanations.`,
+        `Provide only 1-2 sentences focusing on implementation details. No conclusions or verbose explanations.`,
         ``,
         `---`,
-        `Remember: If audio is provided, reference it naturally in your response. Focus on the solution itself.`,
         `CODE FORMATTING: Use ONLY \`\`\` WITH the language specifier for all code blocks.`
       );
       const prompt = promptLines.join("\n");
@@ -685,26 +684,25 @@ export class ProcessingHelper {
         `Your response MUST follow this structure, using Markdown headings:`,
         ``,
         `# Context`,
-        `If audio is provided, briefly reference what you hear and how it relates to the visual content. Keep this extremely brief and focus on your solution approach. One or two sentences maximum.`,
+        `Briefly summarize the context from the visual content.`,
         ``,
         `# What's the question?`,
-        `Briefly summarize based on the visual and audio content. This helps set context for the analysis.`,
+        `Briefly summarize based on the visual content. This helps set context for the analysis.`,
         ``,
         `# Analysis`,
-        `If audio is provided, briefly reference what you hear and how it relates to the visual content. Keep this extremely brief and focus on your solution approach. One or two sentences maximum.`,
+        `Analyze the visual content and how it relates to the question. Keep this brief and focused.`,
         ``,
         `# Solution`,
-        `Provide the direct solution based on both visual and audio content. Use standard Markdown. If code is necessary, use appropriate code blocks. Do not describe the task itself.`,
+        `Provide the direct solution based on the visual content. Use standard Markdown. If code is necessary, use appropriate code blocks. Do not describe the task itself.`,
         `IMPORTANT: When adding code blocks, use triple backticks WITH the language specifier. Use \`\`\`language\\ncode here\\n\`\`\`.`,
         ``,
         `# Approach`,
-        `Describe the approach taken to solve the issue. Focus on implementation details and any specific techniques used. Make sure to keep it concise and relevant to the visual/audio content.`,
+        `Describe the approach taken to solve the issue. Focus on implementation details and any specific techniques used. Keep it concise and relevant to the visual content.`,
         ``,
         `# Summary`,
-        `Provide only 1-2 sentences focusing on implementation details. Mention if audio context influenced the solution. No conclusions or verbose explanations.`,
+        `Provide only 1-2 sentences focusing on implementation details. No conclusions or verbose explanations.`,
         ``,
         `---`,
-        `Remember: If audio is provided, reference it naturally in your response. Focus on the solution itself.`,
         `CODE FORMATTING: Use ONLY \`\`\` WITH the language specifier for all code blocks.`
       );
       const prompt = promptLines.join("\n");
@@ -854,6 +852,99 @@ export class ProcessingHelper {
 
   public getPreviousResponse(): string | null {
     return this.previousResponse;
+  }
+
+  // ============================================================================
+  // NEW: Chat Message Processing (Text-Only)
+  // ============================================================================
+  public async processChatMessage(message: string): Promise<void> {
+    if (this.isCurrentlyProcessing) {
+      console.log("Processing already in progress. Skipping chat message call.");
+      return;
+    }
+
+    this.isCurrentlyProcessing = true;
+    const mainWindow = this.deps.getMainWindow();
+    if (!mainWindow) {
+      this.isCurrentlyProcessing = false;
+      return;
+    }
+
+    try {
+      mainWindow.webContents.send(this.deps.PROCESSING_EVENTS.INITIAL_START);
+
+      // Create abort controller
+      const abortController = this.createAbortController('main');
+      const { signal } = abortController;
+
+      // Get API config
+      const storeModule = require("./main");
+      const apiKey = await storeModule.getStoreValue("api-key");
+      const model = (await storeModule.getStoreValue("api-model")) || "gemini-2.5-flash";
+
+      if (!apiKey) {
+        throw new Error("API key not configured");
+      }
+
+      const gemini = new GoogleGenerativeAI(apiKey);
+      const geminiModel = gemini.getGenerativeModel({ model });
+
+      // Send stream of response
+      let accumulatedText = "";
+      const result = await geminiModel.generateContentStream(message);
+
+      for await (const chunk of result.stream) {
+        if (signal.aborted) {
+          throw new Error("Request aborted");
+        }
+
+        const chunkText = chunk.text();
+        accumulatedText += chunkText;
+
+        // Send chunk to UI
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send(
+            this.deps.PROCESSING_EVENTS.RESPONSE_CHUNK,
+            { response: accumulatedText }
+          );
+        }
+      }
+
+      // Store as previous response for context
+      this.previousResponse = accumulatedText;
+
+      // Send final success message
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send(
+          this.deps.PROCESSING_EVENTS.RESPONSE_SUCCESS,
+          { response: accumulatedText }
+        );
+      }
+
+    } catch (error: any) {
+      const mainWindow = this.deps.getMainWindow();
+      
+      if (error.message === "Request aborted" || error.name === "AbortError") {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send(
+            this.deps.PROCESSING_EVENTS.INITIAL_RESPONSE_ERROR,
+            "Response generation canceled."
+          );
+        }
+      } else {
+        console.error("Chat message processing error:", error);
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send(
+            this.deps.PROCESSING_EVENTS.INITIAL_RESPONSE_ERROR,
+            error.message || "Failed to process chat message"
+          );
+        }
+      }
+    } finally {
+      this.isCurrentlyProcessing = false;
+      this.clearProcessingTimeouts();
+      this.safeAbortController(this.currentProcessingAbortController);
+    }
   }
 
   // ============================================================================

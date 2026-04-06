@@ -953,5 +953,33 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
     }
   }, "get-opacity"));
 
+  // ============================================================================
+  // Chat Message Handler (Text-Only)
+  // ============================================================================
+  ipcMain.handle("send-chat-message", createSafeIpcHandler(async (
+    _event: any,
+    message: string
+  ) => {
+    try {
+      if (!message || typeof message !== "string") {
+        return { success: false, error: "Invalid message provided" };
+      }
+
+      if (!deps.processingHelper) {
+        return { success: false, error: "Processing helper not available" };
+      }
+
+      // Process the chat message
+      await deps.processingHelper.processChatMessage(message.trim());
+      return { success: true, data: "Message sent" };
+    } catch (error: any) {
+      console.error("Error processing chat message:", error);
+      return { 
+        success: false, 
+        error: `Failed to process message: ${error.message}` 
+      };
+    }
+  }, "send-chat-message"));
+
   console.log("FIXED: All IPC handlers initialized successfully with DIRECT dimension updates (NO BATCHING)");
 }

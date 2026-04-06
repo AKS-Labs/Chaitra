@@ -1,5 +1,5 @@
 {
-  "name": "phantomlens",
+  "name": "Chaitra",
   "version": "1.2.0",
   "main": "dist-electron/main.js",
   "scripts": {
@@ -28,8 +28,8 @@
     "package-linux": "npm run build && electron-builder build --linux"
   },
   "build": {
-    "appId": "com.inulute.phantomlens",
-    "productName": "PhantomLens",
+    "appId": "com.inulute.Chaitra",
+    "productName": "Chaitra",
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
@@ -71,7 +71,7 @@
           ]
         }
       ],
-      "artifactName": "PhantomLens-${arch}.${ext}",
+      "artifactName": "Chaitra-${arch}.${ext}",
       "icon": "assets/icons/mac/icon.icns",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -80,9 +80,9 @@
       "identity": "Developer ID Application",
       "notarize": true,
       "protocols": {
-        "name": "PhantomLens-protocol",
+        "name": "Chaitra-protocol",
         "schemes": [
-          "PhantomLens"
+          "Chaitra"
         ]
       },
       "extraResources": [
@@ -109,9 +109,9 @@
       "icon": "assets/icons/win/icon.ico",
       "artifactName": "${productName}-Windows-${version}.${ext}",
       "protocols": {
-        "name": "phantomlens-protocol",
+        "name": "Chaitra-protocol",
         "schemes": [
-          "phantomlens"
+          "Chaitra"
         ]
       }
     },
@@ -133,9 +133,9 @@
       "icon": "assets/icons/png/icon-256x256.png",
       "artifactName": "${productName}-Linux-${version}.${ext}",
       "protocols": {
-        "name": "PhantomLens-protocol",
+        "name": "Chaitra-protocol",
         "schemes": [
-          "PhantomLens"
+          "Chaitra"
         ]
       },
       "publish": {
@@ -165,11 +165,11 @@
     "screen-capture",
     "ai-assistant",
     "developer-tools",
-    "phantomlens"
+    "Chaitra"
   ],
   "author": "inulute",
   "license": "MIT",
-  "description": "PhantomLens - AI-powered screen analysis and assistance tool",
+  "description": "Chaitra - AI-powered screen analysis and assistance tool",
   "homepage": "https://github.com/inulute/phantom-lens",
   "repository": {
     "type": "git",
