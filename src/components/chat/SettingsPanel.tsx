@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Settings, Info, ExternalLink, Shield, Save, RefreshCw, Heart } from "lucide-react";
+import { X, Settings, ExternalLink, Shield, RefreshCw, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SettingsPanelProps {
@@ -126,132 +126,149 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-[101] p-1 px-4"
           >
-            <div className="relative bg-black/10 border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-[40px] overflow-hidden pointer-events-auto group">
-              {/* Animated glass shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
-              
+            <div className="bg-[#121214]/90 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl overflow-hidden pointer-events-auto">
               {/* Header */}
-              <div className="relative flex items-center justify-between px-8 py-5 border-b border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/20 rounded-xl">
-                    <Settings className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-white tracking-tight">System Configuration</h2>
-                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-medium">Phantom Lens v1.2.0</p>
-                  </div>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/5">
+                <div className="flex items-center gap-2">
+                  <Settings className="w-5 h-5 text-blue-400" />
+                  <h2 className="text-lg font-semibold text-white/90">Settings</h2>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-xl hover:bg-white/10 text-white/30 hover:text-white transition-all transform hover:rotate-90 duration-300"
+                  className="p-1 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Scrollable Content */}
-              <div className="relative p-8 space-y-10 max-h-[70vh] overflow-y-auto no-scrollbar">
+              <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
                 
                 {/* API Section */}
-                <section className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-blue-400" />
-                      <h3 className="text-[10px] font-bold text-blue-400/60 uppercase tracking-[0.2em]">Neural Connection</h3>
-                    </div>
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="w-4 h-4 text-blue-400/80" />
+                    <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest">AI Engine</h3>
                   </div>
                   
-                  <div className="space-y-5">
-                    <div className="space-y-3">
-                      <label className="text-xs font-semibold text-white/50 px-1">Gemini Pro API Key</label>
-                      <div className="relative">
-                        <input
-                          type="password"
-                          value={apiKey}
-                          onChange={(e) => setApiKey(e.target.value)}
-                          placeholder="••••••••••••••••"
-                          className="w-full bg-white/5 border border-white/10 text-white px-5 py-3 rounded-2xl focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all text-sm placeholder:text-white/10"
-                        />
-                      </div>
-                      <p className="text-[10px] text-white/20 px-1 leading-relaxed">
-                        Securely stored locally. Never transmitted except to AI provider.
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white/70">Gemini API Key</label>
+                      <input
+                        type="password"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="Paste your key here..."
+                        className="w-full bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all text-sm"
+                      />
+                      <p className="text-[10px] text-white/40 leading-relaxed italic">
+                        Get your API key for free at 
+                        <button 
+                          onClick={() => openLink('https://aistudio.google.com/app/apikey')}
+                          className="ml-1 text-blue-400 hover:underline inline-flex items-center gap-0.5"
+                        >
+                          Google AI Studio <ExternalLink className="w-2.5 h-2.5" />
+                        </button>
                       </p>
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="text-xs font-semibold text-white/50 px-1">Model Architecture</label>
-                      <div className="relative group/select">
-                        <select
-                          value={selectedModel}
-                          onChange={(e) => setSelectedModel(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 text-white px-5 py-3 rounded-2xl focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all text-sm appearance-none cursor-pointer"
-                        >
-                          {MODEL_OPTIONS.map((opt) => (
-                            <option key={opt.id} value={opt.id} className="bg-slate-900 text-white">
-                              {opt.name}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-white/20">
-                           <ExternalLink className="w-4 h-4" />
-                        </div>
-                      </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-white/70">Preferred Model</label>
+                      <select
+                        value={selectedModel}
+                        onChange={(e) => setSelectedModel(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 text-white px-4 py-2.5 rounded-xl focus:outline-none focus:border-blue-500/50 focus:bg-white/10 transition-all text-sm appearance-none cursor-pointer"
+                      >
+                        {MODEL_OPTIONS.map((opt) => (
+                          <option key={opt.id} value={opt.id} className="bg-[#121214] text-white">
+                            {opt.name}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-[11px] text-white/50">{MODEL_OPTIONS.find(m => m.id === selectedModel)?.description}</p>
                     </div>
                   </div>
                 </section>
 
                 {/* Shortcuts Section */}
-                <section className="space-y-6">
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className="w-4 h-4 text-emerald-400" />
-                    <h3 className="text-[10px] font-bold text-emerald-400/60 uppercase tracking-[0.2em]">Neural Links</h3>
+                <section className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <RefreshCw className="w-4 h-4 text-emerald-400/80" />
+                    <h3 className="text-xs font-semibold text-white/40 uppercase tracking-widest">Shortcuts</h3>
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-2 gap-3 text-xs">
                     {[
-                      { key: 'Ctrl + \\', label: 'Toggle Neural Interface' },
-                      { key: 'Ctrl + Shift + V', label: 'Toggle Transparency' },
-                      { key: 'Ctrl + Shift + S', label: 'Capture & Process' },
-                      { key: 'Ctrl + ,', label: 'System Config' },
+                      { key: 'Ctrl + \\', label: 'Toggle Window' },
+                      { key: 'Ctrl + ,', label: 'Settings' },
+                      { key: 'Ctrl + R', label: 'Reset / Cancel' },
+                      { key: 'C+S+S', label: 'Capture & Ask' },
+                      { key: 'Alt + ↑↓', label: 'History Nav' },
                     ].map((s, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] transition-all group/item">
-                        <span className="text-xs text-white/50 group-hover/item:text-white/80 transition-colors">{s.label}</span>
-                        <kbd className="font-mono text-[10px] text-white/60 bg-white/10 px-2 py-1 rounded-lg border border-white/10">{s.key}</kbd>
+                      <div key={i} className="flex flex-col gap-1.5 p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/[0.07] transition-colors">
+                        <span className="text-white/40 text-[10px]">{s.label}</span>
+                        <kbd className="font-mono text-blue-300/80 bg-blue-500/10 px-1.5 py-0.5 rounded-md inline-block self-start">{s.key}</kbd>
                       </div>
                     ))}
+                  </div>
+                </section>
+
+                {/* Updates & Support */}
+                <section className="pt-2 border-t border-white/5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      {updateInfo?.updateAvailable ? (
+                        <button
+                          onClick={() => openLink(updateInfo.releaseUrl || 'https://ph.inulute.com/dl')}
+                          className="text-xs px-3 py-1.5 bg-blue-500/20 text-blue-300 rounded-full border border-blue-500/30 hover:bg-blue-500/30 transition-all flex items-center gap-1.5"
+                        >
+                          Update to {updateInfo.latestVersion} Available
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-white/30 font-medium">Version v1.2.0 (Stable)</span>
+                      )}
+                    </div>
+                    
+                    <button 
+                      onClick={() => openLink('https://support.inulute.com')}
+                      className="flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+                    >
+                      <Heart className="w-3.5 h-3.5 text-red-400/70" />
+                      Support Project
+                    </button>
                   </div>
                 </section>
               </div>
 
               {/* Footer Actions */}
-              <div className="relative px-8 py-6 bg-white/[0.02] border-t border-white/5 flex items-center justify-between">
-                <div className="flex-1">
+              <div className="px-6 py-4 bg-white/5 border-t border-white/5 flex items-center justify-between">
+                <div>
                    {saveSuccess && (
-                     <motion.div 
-                       initial={{ opacity: 0, y: 10 }}
-                       animate={{ opacity: 1, y: 0 }}
-                       className="flex items-center gap-2 text-emerald-400"
+                     <motion.span 
+                       initial={{ opacity: 0, x: -10 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       className="text-xs text-emerald-400/90 font-medium"
                      >
-                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                       <span className="text-[10px] font-bold uppercase tracking-wider">Sync Complete</span>
-                     </motion.div>
+                       Settings saved!
+                     </motion.span>
                    )}
-                   {error && <span className="text-[10px] text-red-400 font-bold uppercase tracking-wider">{error}</span>}
+                   {error && <span className="text-xs text-red-400/90">{error}</span>}
                 </div>
                 
-                <div className="flex gap-4">
-                  <button
+                <div className="flex gap-2">
+                  <Button
                     onClick={onClose}
-                    className="text-[11px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
+                    variant="ghost"
+                    className="text-white/60 hover:text-white hover:bg-white/10 rounded-xl px-6"
                   >
-                    Dismiss
-                  </button>
+                    Close
+                  </Button>
                   <Button
                     onClick={handleSave}
                     disabled={isLoading}
-                    className="bg-blue-600/80 hover:bg-blue-600 text-white rounded-2xl px-8 py-5 h-auto text-[11px] font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(37,99,235,0.3)] transition-all active:scale-95"
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 shadow-lg shadow-blue-600/20"
                   >
-                    {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Commit Changes"}
+                    {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Save Changes"}
                   </Button>
                 </div>
               </div>

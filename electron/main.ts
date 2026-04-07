@@ -1,4 +1,4 @@
-import { BrowserWindow, app, screen, Menu } from "electron";
+import { BrowserWindow, app, screen, Menu, ipcMain } from "electron";
 import { ProcessingHelper } from "./ProcessingHelper";
 import { ScreenCaptureHelper } from "./ScreenCaptureHelper";
 import { ScreenshotHelper } from "./ScreenshotHelper";
