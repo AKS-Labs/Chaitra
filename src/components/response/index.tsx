@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 
-import Commands from "@/components/Commands";
 import { MarkdownSection } from "@/components/shared/MarkdownSection";
 import { Screenshot } from "@/types/screenshots";
 import { fetchScreenshots } from "@/utils/screenshots";
@@ -391,29 +390,7 @@ export default function Response({ setView }: ResponseProps) {
         width: "100%"
       }}
     >
-          {/* FIXED: Reduced spacing and margins for commands */}
-          <motion.div 
-            className="commands-container flex-shrink-0 w-full"
-            style={{ 
-              background: (hasResponse || isTransparent) ? 'transparent' : 'rgba(0, 0, 0, 0.3)',
-              backdropFilter: (hasResponse || isTransparent) ? 'none' : 'blur(5px)',
-              borderRadius: '12px',
-              border: (hasResponse || isTransparent) ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
-              zIndex: 1000,
-              position: 'relative',
-              marginBottom: '6px', // FIXED: Reduced bottom margin
-              maxWidth: `${RESPONSE_WIDTH}px`,
-              width: '100%',
-              pointerEvents: 'none', // Always pass-through (stealth mode only)
-            }}
-            variants={commandsVariants}
-          >
-            <Commands
-              view="response"
-              isLoading={isLoading}
-              isMinimal={false}
-            />
-          </motion.div>
+          {/* Commands section removed */}
 
           {/* Response Container - Matches thinking window dimensions */}
           <div 

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 
-import Commands from "@/components/Commands";
 import { Screenshot } from "@/types/screenshots";
 import { fetchScreenshots } from "@/utils/screenshots";
 
@@ -50,13 +49,6 @@ export default function Initial({ setView }: InitialProps) {
       className="relative space-y-2 px-4 py-2"
       style={{ minHeight: '80px' }} // FIXED: Reduced minimum height
     >
-      {/* Commands section with reduced spacing */}
-      <div className="relative z-10">
-        <Commands
-          view="initial"
-          isMinimal={true}
-        />
-      </div>
 
       {/* Screenshot previews with reduced spacing */}
       {screenshots.length > 0 && (

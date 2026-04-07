@@ -497,8 +497,8 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
       // EMERGENCY: Ensure safe state on error
       const mainWindow = deps.getMainWindow();
       if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.setFocusable(false);
-        mainWindow.setIgnoreMouseEvents(true);
+        mainWindow.setFocusable(true);
+        mainWindow.setIgnoreMouseEvents(false);
       }
       
       return { 
@@ -680,7 +680,7 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
       }
       
       // CRITICAL: Remove dangerous forward option
-      mainWindow.setIgnoreMouseEvents(true);
+      mainWindow.setIgnoreMouseEvents(false);
       
       console.log("[IPC-FIXED] Emergency recovery completed successfully");
       return { 
@@ -770,113 +770,8 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
   }, "set-store-value"));
 
   // ============================================================================
-  // CRITICAL FIX: Safe Mouse Event Handlers (NO FORWARDING)
+  // Settings Window Handler
   // ============================================================================
-  
-  ipcMain.handle("set-ignore-mouse-events", createSafeIpcHandler(() => {
-    try {
-      const mainWindow = deps.getMainWindow();
-      if (!mainWindow || mainWindow.isDestroyed()) {
-        return { success: false, error: "Main window not available" };
-      }
-
-      // CRITICAL: Remove { forward: true } option to prevent system freezing
-      mainWindow.setIgnoreMouseEvents(true);
-      console.log("[IPC-FIXED] Mouse events set to ignore (click-through) - NO FORWARDING");
-      deps.disableInteractiveOverride();
-      return { success: true, data: "Mouse events set to ignore" };
-    } catch (error: any) {
-      console.error("Error setting ignore mouse events:", error);
-      return { 
-        success: false, 
-        error: `Failed to set ignore mouse events: ${error.message}` 
-      };
-    }
-  }, "set-ignore-mouse-events"));
-
-  ipcMain.handle("set-interactive-mouse-events", createSafeIpcHandler(() => {
-    try {
-      const mainWindow = deps.getMainWindow();
-      if (!mainWindow || mainWindow.isDestroyed()) {
-        return { success: false, error: "Main window not available" };
-      }
-
-      mainWindow.setIgnoreMouseEvents(false);
-      console.log("[IPC-FIXED] Mouse events set to interactive");
-      deps.enableInteractiveOverride();
-      return { success: true, data: "Mouse events set to interactive" };
-    } catch (error: any) {
-      console.error("Error setting interactive mouse events:", error);
-      return { 
-        success: false, 
-        error: `Failed to set interactive mouse events: ${error.message}` 
-      };
-    }
-  }, "set-interactive-mouse-events"));
-
-  // Safe alternative mouse event handlers
-  ipcMain.handle("enable-safe-click-through", createSafeIpcHandler(() => {
-    try {
-      const mainWindow = deps.getMainWindow();
-      if (!mainWindow || mainWindow.isDestroyed()) {
-        return { success: false, error: "Main window not available" };
-      }
-      mainWindow.setIgnoreMouseEvents(true);
-      console.log("[IPC-FIXED] Safe click-through mode enabled");
-      deps.disableInteractiveOverride();
-      return { success: true, data: "Safe click-through enabled" };
-    } catch (error: any) {
-      console.error("Error enabling safe click-through:", error);
-      return { 
-        success: false, 
-        error: `Failed to enable click-through: ${error.message}` 
-      };
-    }
-  }, "enable-safe-click-through"));
-
-  ipcMain.handle("restore-interactive-mode", createSafeIpcHandler(() => {
-    try {
-      const mainWindow = deps.getMainWindow();
-      if (!mainWindow || mainWindow.isDestroyed()) {
-        return { success: false, error: "Main window not available" };
-      }
-      mainWindow.setIgnoreMouseEvents(false);
-      mainWindow.setFocusable(true);
-      console.log("[IPC-FIXED] Interactive mode restored");
-      deps.enableInteractiveOverride();
-      return { success: true, data: "Interactive mode restored" };
-    } catch (error: any) {
-      console.error("Error restoring interactive mode:", error);
-      return { 
-        success: false, 
-        error: `Failed to restore interactive mode: ${error.message}` 
-      };
-    }
-  }, "restore-interactive-mode"));
-
-  ipcMain.handle("emergency-mouse-recovery", createSafeIpcHandler(() => {
-    try {
-      const mainWindow = deps.getMainWindow();
-      if (!mainWindow || mainWindow.isDestroyed()) {
-        return { success: false, error: "Main window not available" };
-      }
-
-      // Force restore all mouse functionality
-      mainWindow.setIgnoreMouseEvents(false);
-      mainWindow.setFocusable(true);
-      mainWindow.show();
-      mainWindow.focus();
-      
-      console.log("[IPC-FIXED] Emergency mouse recovery completed");
-      return { success: true, data: "Mouse events recovered" };
-    } catch (error: any) {
-      console.error("Emergency mouse recovery failed:", error);
-      return { 
-        success: false, 
-        error: `Emergency recovery failed: ${error.message}`
-      };
-    }
-  }, "emergency-mouse-recovery"));
 
   // ============================================================================
   // Settings Window Handler

@@ -86,8 +86,8 @@ export class ShortcutsHelper {
             console.log("EMERGENCY: Window size reset");
           }
           
-          // Ensure click-through (NO forwarding)
-          mainWindow.setIgnoreMouseEvents(true);
+          // Ensure window is interactive
+          mainWindow.setIgnoreMouseEvents(false);
           
           console.log("EMERGENCY: Recovery completed successfully");
           

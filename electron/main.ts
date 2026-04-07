@@ -16,12 +16,7 @@ let configWriteQueue: Array<() => Promise<void>> = [];
 // FIXED: Single, Stable Dimension Management System with Tooltip Fix
 // NO MORE BATCHING - Direct updates only
 // ============================================================================
-let isUpdatingDimensions = false;
-let lockedResponseWidth: number | null = null;
-let lastUpdateTime = 0;
-let lastDimensions = { width: 0, height: 0 };
 let dimensionUpdateTimeout: NodeJS.Timeout | null = null;
-let interactiveOverride = false;
 
 
 
@@ -69,8 +64,7 @@ function showWindowWithoutFocus(): void {
       state.mainWindow.show();
     }
     
-    // Re-apply interactivity state after showing
-    applyInteractivityState();
+    // window shown logic...
   } catch (error) {
     console.error("Error showing window without focus:", error);
   }
@@ -375,74 +369,16 @@ export interface initializeIpcHandlerDeps {
   isInteractiveOverrideEnabled: () => boolean;
 }
 
-// ============================================================================
-// STABLE Interactivity Management
-// ============================================================================
-function applyInteractivityState(): void {
-  if (!state.mainWindow || state.mainWindow.isDestroyed()) return;
-
-  try {
-    if (interactiveOverride) {
-      state.mainWindow.setIgnoreMouseEvents(false);
-      state.mainWindow.setFocusable(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setAlwaysOnTop(true, (process.platform === "win32" ? "screen-saver" : "floating"), 1);
-      return;
-    }
-
-    const shouldBeInert = state.mode === "stealth" || 
-                         state.view === "response" || 
-                         state.view === "followup";
-    
-    if (shouldBeInert) {
-      // CRITICAL: Apply skipTaskbar FIRST and MULTIPLE times to prevent taskbar from appearing
-      // Windows can be slow to respond, so we call it multiple times aggressively
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setFocusable(false);
-      state.mainWindow.setFocusable(false); // Double-call to ensure it sticks
-      state.mainWindow.setIgnoreMouseEvents(true);
-      // Blur immediately if window somehow got focus
-      if (state.mainWindow.isFocused()) {
-        state.mainWindow.blur();
-      }
-      // One more skipTaskbar call after other operations
-      state.mainWindow.setSkipTaskbar(true);
-    } else {
-      state.mainWindow.setIgnoreMouseEvents(false);
-      state.mainWindow.setFocusable(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setAlwaysOnTop(true, (process.platform === "win32" ? "screen-saver" : "floating"), 1);
-    }
-  } catch (error) {
-    console.error("[Interactivity] Failed to apply state:", error);
-  }
-}
-
 function enableInteractiveOverride(): void {
-  if (interactiveOverride) return;
-  interactiveOverride = true;
-  console.log("[Interactivity] Interactive override enabled");
-  try {
-    applyInteractivityState();
-  } catch (error) {
-    console.error("Failed to enable interactive override:", error);
-  }
+  // Logic removed to restore full interactivity
 }
 
 function disableInteractiveOverride(): void {
-  if (!interactiveOverride) return;
-  interactiveOverride = false;
-  console.log("[Interactivity] Interactive override disabled");
-  try {
-    applyInteractivityState();
-  } catch (error) {
-    console.error("Failed to disable interactive override:", error);
-  }
+  // Logic removed to restore full interactivity
 }
 
 function isInteractiveOverrideEnabled(): boolean {
-  return interactiveOverride;
+  return false;
 }
 
 // ============================================================================
@@ -629,318 +565,41 @@ function moveWindowSmooth(deltaX: number, deltaY: number) {
 function setWindowDimensions(width: number | string, height: number): void {
   if (!state.mainWindow || state.mainWindow.isDestroyed()) return;
 
-  // Rate limiting to prevent excessive updates
-  const now = Date.now();
+  const numericWidth = typeof width === "number" ? width : 832;
+  const numericHeight = height + 20;
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const workArea = primaryDisplay.workArea;
   
-  // FIXED: Smart rate limiting - allow tooltip height increases but prevent rapid shifts
-  const minDelay = (typeof width === "string" && width === "fixed") ? 300 : 250;
-  if (now - lastUpdateTime < minDelay) {
-    // console.log(`[FIXED] Rate limited - skipping update (delay: ${now - lastUpdateTime}ms, min: ${minDelay}ms)`);
-    return;
-  }
+  const finalWidth = Math.min(numericWidth, Math.floor(workArea.width * 0.95));
+  const finalHeight = Math.min(numericHeight, Math.floor(workArea.height * 0.95));
 
-  if (isUpdatingDimensions) {
-    console.log("[FIXED] Already updating - skipping");
-    return;
-  }
-
-
-  // Clear any pending updates
-  if (dimensionUpdateTimeout) {
-    clearTimeout(dimensionUpdateTimeout);
-  }
-
-  // Use immediate update with minimal delay for stability
-  dimensionUpdateTimeout = setTimeout(() => {
-    if (!state.mainWindow || state.mainWindow.isDestroyed()) return;
-
-    isUpdatingDimensions = true;
-    lastUpdateTime = now;
-
-    try {
-      let numericWidth: number;
-      
-      // FIXED: Improved width logic to prevent tooltip-induced growth
-      if (typeof width === "string" && width === "fixed") {
-        // Use locked width if available, otherwise current width
-        if (lockedResponseWidth !== null && (state.view === "response" || state.view === "followup")) {
-          numericWidth = lockedResponseWidth;
-          console.log(`[FIXED] Using locked width: ${numericWidth}px`);
-        } else {
-          // FIXED: Use actual current width WITHOUT adding padding
-          const currentBounds = state.mainWindow.getBounds();
-          numericWidth = currentBounds.width;
-          console.log(`[FIXED] Using current window width: ${numericWidth}px (fixed)`);
-        }
-      } else {
-        numericWidth = typeof width === "number" ? width : 800;
-        
-        // Handle view-specific width logic
-        if (state.view === "initial") {
-          // console.log(`[FIXED] Initial view - setting width to ${numericWidth}px`);
-          // Clear locked width when returning to initial
-          if (lockedResponseWidth !== null) {
-            console.log("[FIXED] Returning to initial - clearing locked width");
-            lockedResponseWidth = null;
-          }
-        } else if (state.view === "response" || state.view === "followup") {
-          // Always use the preset width (832px) for response/followup views to match thinking window
-          if (lockedResponseWidth === null) {
-            lockedResponseWidth = 832; // Match the thinking window width
-            console.log(`[FIXED] Locking response width to ${lockedResponseWidth}px (matching thinking window)`);
-          }
-          // Always use locked width to ensure consistency
-          numericWidth = lockedResponseWidth;
-          console.log(`[FIXED] Using locked width for ${state.view}: ${numericWidth}px`);
-        }
-      }
-
-      const safeWidth = Math.max(numericWidth, 300);
-      const safeHeight = Math.max(height + 15, 120);
-
-      const primaryDisplay = screen.getPrimaryDisplay();
-      const workArea = primaryDisplay.workArea;
-      const maxWidth = Math.floor(workArea.width * 0.9);
-      const maxHeight = Math.floor(workArea.height * 0.98);
-
-      const finalWidth = Math.min(safeWidth, maxWidth);
-      const finalHeight = Math.min(safeHeight, maxHeight);
-
-      // FIXED: More aggressive filtering to prevent micro-updates and tooltip-induced shifts
-      const widthDiff = Math.abs(finalWidth - lastDimensions.width);
-      const heightDiff = Math.abs(finalHeight - lastDimensions.height);
-      
-      // FIXED: Skip very small changes that could cause tooltip-induced shifts
-      if (widthDiff < 25 && heightDiff < 30 && lastDimensions.width > 0) {
-        console.log(`[FIXED] Skipping small change (width: ${widthDiff}px, height: ${heightDiff}px)`);
-        isUpdatingDimensions = false;
-        return;
-      }
-      
-      // FIXED: Smart filtering for fixed-width requests - allow height increases for tooltips but prevent shifts
-      if (typeof width === "string" && width === "fixed") {
-        const currentBounds = state.mainWindow.getBounds();
-        
-        // Allow height INCREASES for tooltips (when new height > current height)
-        if (finalHeight > currentBounds.height) {
-          console.log(`[FIXED] Allowing height increase for tooltip: ${currentBounds.height}px -> ${finalHeight}px`);
-          // This is allowed - continue with update
-        } else if (heightDiff < 50) {
-          // Block small height DECREASES that cause shifting
-          console.log(`[FIXED] BLOCKING small height decrease (height diff: ${heightDiff}px) - preventing tooltip shift`);
-          isUpdatingDimensions = false;
-          return;
-        } else if (currentBounds.height >= 400 && finalHeight < currentBounds.height) {
-          // Block height decreases when current height is already sufficient
-          console.log(`[FIXED] BLOCKING height decrease - current height (${currentBounds.height}px) already sufficient`);
-          isUpdatingDimensions = false;
-          return;
-        }
-      }
-      
-      const currentBounds = state.mainWindow.getBounds();
-      const newBounds = {
-        x: currentBounds.x,
-        y: currentBounds.y,
-        width: finalWidth,
-        height: finalHeight,
-      };
-
-      // FIXED: Only center for very significant width changes (75px+) and only when explicitly changing width
-      // Keep Y position very stable
-      newBounds.y = currentBounds.y;
-      
-      // Ensure window stays on screen
-      if (newBounds.x < workArea.x) newBounds.x = workArea.x;
-      if (newBounds.y < workArea.y) newBounds.y = workArea.y;
-      if (newBounds.x + newBounds.width > workArea.x + workArea.width) {
-        newBounds.x = workArea.x + workArea.width - newBounds.width;
-      }
-      if (newBounds.y + newBounds.height > workArea.y + workArea.height) {
-        newBounds.y = workArea.y + workArea.height - newBounds.height;
-      }
-
-      console.log(`[FIXED] Applying stable bounds: ${JSON.stringify(newBounds)} (view: ${state.view})`);
-      
-      // CRITICAL: For inert views, aggressively prevent taskbar BEFORE bounds change
-      const shouldBeInert = state.mode === "stealth" || 
-                           state.view === "response" || 
-                           state.view === "followup";
-      const overrideActive = isInteractiveOverrideEnabled();
-      if (shouldBeInert && !overrideActive) {
-        // Set skipTaskbar MANY times synchronously before bounds change
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setFocusable(false);
-      }
-      
-      // Apply bounds with smooth animation
-      state.mainWindow.setBounds(newBounds, true);
-      
-      // CRITICAL: Immediately after setBounds, set skipTaskbar again synchronously
-      if (shouldBeInert && !overrideActive) {
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setFocusable(false);
-      }
-      
-      applyInteractivityState();
-      
-      // CRITICAL: For inert views, aggressively re-apply after bounds change
-      // This prevents taskbar from appearing during window resize
-      if (shouldBeInert && !overrideActive) {
-        // Use setImmediate for fastest possible execution
-        setImmediate(() => {
-          if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-            applyInteractivityState();
-            state.mainWindow.setSkipTaskbar(true);
-            state.mainWindow.setSkipTaskbar(true);
-            state.mainWindow.setSkipTaskbar(true);
-          }
-        });
-        
-        // One more check with minimal delay
-        setTimeout(() => {
-          if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-            applyInteractivityState();
-            state.mainWindow.setSkipTaskbar(true);
-          }
-        }, 1); // 1ms - fastest possible
-      }
-
-      // Update tracking state
-      state.windowSize = { width: finalWidth, height: finalHeight };
-      state.lastSuccessfulDimensions = { width: finalWidth, height: finalHeight };
-      lastDimensions = { width: finalWidth, height: finalHeight };
-
-    } catch (error) {
-      console.error("[FIXED] Error in dimension update:", error);
-    } finally {
-      // Reset flag with short delay
-      setTimeout(() => {
-        isUpdatingDimensions = false;
-      }, 50);
-    }
-  }, 100); // Short, consistent delay
+  const bounds = state.mainWindow.getBounds();
+  state.mainWindow.setBounds({
+    x: bounds.x,
+    y: bounds.y,
+    width: finalWidth,
+    height: finalHeight
+  }, true);
+  
+  state.windowSize = { width: finalWidth, height: finalHeight };
 }
 
-// Helper functions for locked width management
 function clearLockedResponseWidth(): void {
-  console.log("[FIXED] Clearing locked response width");
-  lockedResponseWidth = null;
+  // Kept for IPC compatibility but logic removed
 }
 
 function getLockedResponseWidth(): number | null {
-  return lockedResponseWidth;
+  return null;
 }
 
-// ============================================================================
-// FIXED: Improved View Management
-// ============================================================================
 function setView(view: "initial" | "response" | "followup"): void {
   if (state.view === view) return;
-  
-  console.log(`[FIXED] View change: ${state.view} -> ${view}`);
-  const previousView = state.view;
-  
-  const mainWindow = getMainWindow();
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    try {
-      // CRITICAL: Determine if new view should be inert BEFORE updating state
-      const willBeInert = state.mode === "stealth" || 
-                         view === "response" || 
-                         view === "followup";
-      const overrideActive = isInteractiveOverrideEnabled();
-      
-      // CRITICAL: Apply interactivity state IMMEDIATELY if transitioning to inert view
-      // This must happen BEFORE updating state to prevent taskbar from appearing
-      if (willBeInert && !overrideActive) {
-        // Aggressively prevent taskbar BEFORE state change - SYNCHRONOUSLY
-        mainWindow.setSkipTaskbar(true);
-        mainWindow.setSkipTaskbar(true);
-        mainWindow.setSkipTaskbar(true);
-        mainWindow.setFocusable(false);
-        mainWindow.setFocusable(false);
-        mainWindow.setFocusable(false);
-        mainWindow.setIgnoreMouseEvents(true);
-        if (mainWindow.isFocused()) {
-          mainWindow.blur();
-        }
-        // One more synchronous call
-        mainWindow.setSkipTaskbar(true);
-      }
-      
-      // Now update state
-      state.view = view;
-      state.screenshotHelper?.setView(view);
-
-      // Signal view change to frontend
-      mainWindow.webContents.send("view-changed", { view });
-
-      // Re-apply interactivity state to ensure consistency
-      applyInteractivityState();
-      
-      // CRITICAL: For inert views, use setImmediate for faster execution (next event loop tick)
-      // This is faster than setTimeout and catches Windows timing issues immediately
-      if (willBeInert && !overrideActive) {
-        // Use setImmediate for near-instant execution (faster than setTimeout)
-        setImmediate(() => {
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            applyInteractivityState();
-            mainWindow.setSkipTaskbar(true);
-            mainWindow.setSkipTaskbar(true);
-            mainWindow.setSkipTaskbar(true);
-            if (!overrideActive && mainWindow.isFocused()) {
-              mainWindow.blur();
-            }
-          }
-        });
-        
-        // One more check with minimal delay (1ms - fastest possible)
-        setTimeout(() => {
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            applyInteractivityState();
-            mainWindow.setSkipTaskbar(true);
-            mainWindow.setSkipTaskbar(true);
-          }
-        }, 1); // 1ms - fastest possible
-        
-        // Final check after 10ms
-        setTimeout(() => {
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            applyInteractivityState();
-            mainWindow.setSkipTaskbar(true);
-          }
-        }, 10);
-      }
-      
-      if (state.mode === "normal" && view === "initial") {
-        setTimeout(() => {
-          if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-            try { state.mainWindow.focus(); } catch {}
-          }
-        }, 100);
-      }
-    } catch (error) {
-      console.error("[FIXED] Error during view transition:", error);
-      applyInteractivityState();
-    }
-  } else {
-    // If window doesn't exist, just update state
-    state.view = view;
-    state.screenshotHelper?.setView(view);
-  }
+  state.view = view;
+  state.screenshotHelper?.setView(view);
+  state.mainWindow?.webContents.send("view-changed", { view });
 }
 
-// Initialize helpers
 function initializeHelpers() {
   state.screenshotHelper = new ScreenshotHelper(state.view);
   state.screenCaptureHelper = new ScreenCaptureHelper();
@@ -1079,8 +738,7 @@ function createWindow(): BrowserWindow {
     });
   }
 
-  // CRITICAL: Apply interactivity state BEFORE showing window
-  applyInteractivityState();
+  // Interactivity logic purged - app is always interactive
   
   // Enable interactive override for chat functionality while keeping stealth mode
   enableInteractiveOverride();
@@ -1099,7 +757,9 @@ function createWindow(): BrowserWindow {
 
   state.mainWindow.webContents.on("did-finish-load", () => {
     // console.log("Window finished loading");
-    applyInteractivityState();
+    if (state.mainWindow && !state.mainWindow.isDestroyed()) {
+      state.mainWindow.setIgnoreMouseEvents(false);
+    }
   });
 
   state.mainWindow.webContents.on("did-fail-load", (event: any, errorCode: number, errorDescription: string) => {
@@ -1119,15 +779,16 @@ function createWindow(): BrowserWindow {
   if (app.isPackaged) {
     state.mainWindow.loadFile(path.join(__dirname, "../index.html"));
   } else {
-    state.mainWindow.loadURL("http://localhost:54321");
+    state.mainWindow.loadURL("http://127.0.0.1:3333");
   }
   
   state.mainWindow.setContentProtection(true);
   state.mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   
-  // CRITICAL: Re-apply interactivity state after setVisibleOnAllWorkspaces
-  // This ensures the window remains non-focusable and skips taskbar even in full screen mode
-  applyInteractivityState();
+  // CRITICAL: Ensure interactivity after potential focus steal
+  if (state.mainWindow && !state.mainWindow.isDestroyed()) {
+    state.mainWindow.setIgnoreMouseEvents(false);
+  }
 
   if (process.platform === "darwin") {
     app.dock.hide();
@@ -1135,51 +796,18 @@ function createWindow(): BrowserWindow {
   }
 
   // Add event listeners to maintain correct state when window visibility changes
-  state.mainWindow.on("show", () => {
-    // Re-apply interactivity state when window is shown (including in full screen mode)
-    applyInteractivityState();
-  });
+    // Logic removed to restore full interactivity
 
   state.mainWindow.on("focus", () => {
-    // CRITICAL: If window should be inert, immediately remove focus and re-apply state
-    // This prevents any focus stealing that might be detected by other apps
-    if (isInteractiveOverrideEnabled()) {
-      return;
-    }
-    const shouldBeInert = state.mode === "stealth" || 
-                         state.view === "response" || 
-                         state.view === "followup";
-    if (shouldBeInert && state.mainWindow && !state.mainWindow.isDestroyed()) {
-      // Log focus event but don't immediately blur if we want to stay visible on fullscreen
-      console.log("[Focus] Window focused in inert mode. Maintaining visibility.");
-      // Instead of immediate blur, just ensure always on top is reapplied
-      state.mainWindow.setAlwaysOnTop(true, (process.platform === "win32" ? "screen-saver" : "floating"), 1);
-      applyInteractivityState();
-    } else if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-      // Even for non-inert views, ensure we don't steal focus unnecessarily
-      // Only allow focus in initial view and normal mode
-      if (state.view !== "initial" || state.mode !== "normal") {
-        state.mainWindow.blur();
-        applyInteractivityState();
-      }
-    }
+    // Logic removed to restore full interactivity
   });
   
   // CRITICAL: Also prevent focus on window-created event
   state.mainWindow.once("ready-to-show", () => {
     if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-      const shouldBeInert = state.mode === "stealth" || 
-                           state.view === "response" || 
-                           state.view === "followup";
-      if (shouldBeInert && !isInteractiveOverrideEnabled()) {
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        if (state.mainWindow.isFocused()) {
-          state.mainWindow.blur();
-        }
-      }
+      state.mainWindow.setIgnoreMouseEvents(false);
+      state.mainWindow.setFocusable(true);
+      state.mainWindow.setSkipTaskbar(true);
     }
   });
 
@@ -1302,9 +930,7 @@ async function loadEnvVariables() {
 async function initializeApp() {
   try {
     await initializeStore();
-    // Always start in stealth mode for undetectable operation
-    // Interactive override will be enabled automatically for chat interaction
-    state.mode = "stealth";
+    state.mode = "normal";
     try { Menu.setApplicationMenu(null); } catch {}
     await loadEnvVariables();
     
@@ -1328,7 +954,7 @@ async function initializeApp() {
     
     initializeIpcHandlers({
       getMainWindow: () => state.mainWindow,
-      setWindowDimensions, // THIS IS THE ONLY DIMENSION FUNCTION WITH TOOLTIP FIX
+      setWindowDimensions, 
       getScreenshotQueue: () => state.screenshotHelper?.getScreenshotQueue() || [],
       getExtraScreenshotQueue: () => state.screenshotHelper?.getExtraScreenshotQueue() || [],
       processingHelper: state.processingHelper,
@@ -1352,7 +978,7 @@ async function initializeApp() {
       getLockedResponseWidth,
       enableInteractiveOverride,
       disableInteractiveOverride,
-      isInteractiveOverrideEnabled,
+      isInteractiveOverrideEnabled: () => false,
     });
     
     createWindow();
@@ -1361,8 +987,6 @@ async function initializeApp() {
     } catch (error) {
       console.error("Global shortcut registration failed:", error);
     }
-
-    // Mode is always stealth - no need to send mode-changed event
   } catch (error) {
     console.error("Error initializing app:", error);
   }
@@ -1373,15 +997,14 @@ async function setPersistedMode(mode: "normal"|"stealth"): Promise<void> {
 }
 
 export function getCurrentMode(): "normal" | "stealth" {
-  // Always return stealth mode
-  return "stealth";
+  return "normal";
 }
 
 async function setMode(mode: "normal"|"stealth"): Promise<void> {
-  // Mode switching disabled - always stealth mode
-  // Keep function for backward compatibility but do nothing
-  state.mode = "stealth";
-  applyInteractivityState();
+  state.mode = "normal";
+  if (state.mainWindow && !state.mainWindow.isDestroyed()) {
+    state.mainWindow.setIgnoreMouseEvents(false);
+  }
 }
 
 export function saveResponseToHistory(responseText: string) {

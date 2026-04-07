@@ -2,11 +2,11 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { MarkdownSection } from "@/components/shared/MarkdownSection";
-import Commands from "@/components/Commands";
+import SettingsPanel from "./SettingsPanel";
 import ChaitraLogo from "../../../assets/icons/phantomlens_logo.svg";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Settings, Keyboard, Info } from "lucide-react";
+import { Settings, Info } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -29,7 +29,7 @@ export default function Chat({ setView }: ChatProps) {
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [transparencyMode, setTransparencyMode] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [isCommandsExpanded, setIsCommandsExpanded] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   // Track listener registration
   const listenersRef = useRef({
@@ -155,6 +155,14 @@ export default function Chat({ setView }: ChatProps) {
     };
   }, []);
 
+  // Handle IPC Settings event
+  useEffect(() => {
+    const cleanup = window.electronAPI.onOpenSettings?.(() => {
+      setIsSettingsOpen(prev => !prev);
+    });
+    return () => cleanup?.();
+  }, []);
+
   const sendMessage = useCallback(async () => {
     if (!inputValue.trim() || isLoading) {
       // console.log('⚠️ Send blocked - input empty or already loading');
@@ -242,49 +250,28 @@ export default function Chat({ setView }: ChatProps) {
     }
   };
 
-  // Handle keyboard shortcuts for commands panel
-  useEffect(() => {
-    const handleGlobalKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+Shift+? to toggle commands panel (Shift+/ on US keyboard = ?)
-      if (e.ctrlKey && e.shiftKey && (e.key === '?' || e.key === '/')) {
-        e.preventDefault();
-        // console.log('[KEYBOARD] Ctrl+Shift+/ pressed, toggling panel:', isCommandsExpanded);
-        setIsCommandsExpanded(prev => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleGlobalKeyDown, true); // Use capture phase
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown, true);
-  }, []);
-
-  const toggleShortcutsPanel = (e: React.KeyboardEvent | React.MouseEvent) => {
-    if (e instanceof KeyboardEvent && e.ctrlKey && e.key === 'Escape') {
-      setIsCommandsExpanded(false);
-    }
-  };
-
   return (
-    <div className="relative flex flex-col h-screen bg-transparent overflow-hidden" onClick={() => {
-      window.electronAPI.setInteractiveMouseEvents?.().catch(() => {});
-    }}>
+    <div className="relative flex flex-col h-screen bg-transparent overflow-hidden">
       {/* Compact Shortcuts Bar */}
-      <div className="relative z-20 border-b border-white/10 bg-black/40 backdrop-blur-md px-4 py-2.5 pointer-events-auto">
+      <div className="relative z-20 border-b border-white/10 bg-black/40 backdrop-blur-md px-4 py-0.5 pointer-events-auto">
         <div className="flex items-center gap-4">
           {/* Settings Trigger */}
-          <button 
-            onClick={() => window.electronAPI.openSettings()}
-            className="flex-shrink-0 p-1.5 rounded-md hover:bg-white/10 text-white/70 transition-colors"
-            title="Settings (Ctrl + ,)"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
+          <div className="flex-shrink-0">
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-1 rounded-md hover:bg-white/10 text-white/70 transition-colors"
+              title="Settings (Ctrl + ,)"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
 
           {/* Vertical Divider */}
           <div className="w-px h-4 bg-white/10 flex-shrink-0" />
 
           {/* Horizontal Scrollable Shortcuts */}
           <div className="flex-1 overflow-x-auto no-scrollbar py-0.5">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {[
                 { keys: 'Ctrl+\\', label: 'Window' },
                 { keys: 'C+S+S', label: 'Capture' },
@@ -297,73 +284,16 @@ export default function Chat({ setView }: ChatProps) {
               ].map((s, i) => (
                 <div 
                   key={i}
-                  className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 border border-white/10"
+                  className="flex-shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/5 border border-white/10"
                 >
-                  <span className="text-[10px] font-mono text-white/50">{s.keys}</span>
-                  <span className="text-[11px] font-medium text-white/80">{s.label}</span>
+                  <span className="text-[9px] font-mono text-white/50 leading-tight">{s.keys}</span>
+                  <span className="text-[10px] font-medium text-white/80 leading-tight">{s.label}</span>
                 </div>
               ))}
             </div>
           </div>
-          
-          {/* Help Trigger */}
-          <button 
-            onClick={() => setIsCommandsExpanded(!isCommandsExpanded)}
-            className="flex-shrink-0 p-1.5 rounded-md hover:bg-white/10 text-white/70 transition-colors"
-            title="Toggle Help (Ctrl + Shift + /)"
-          >
-            <Keyboard className="w-4 h-4" />
-          </button>
         </div>
         
-        {/* Expanded Commands Panel - Floating Overlay */}
-        <AnimatePresence>
-          {isCommandsExpanded && (
-            <>
-              {/* Click-outside overlay - pointer-events-auto so it can receive clicks */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => {
-                  // console.log('[UI] Overlay clicked, closing panel');
-                  setIsCommandsExpanded(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    // console.log('[UI] Escape pressed on overlay, closing panel');
-                    e.preventDefault();
-                    setIsCommandsExpanded(false);
-                  }
-                }}
-                className="fixed inset-0 z-30 pointer-events-auto"
-                tabIndex={-1}
-              />
-              {/* Commands Panel - Floating below the bar */}
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                className="absolute top-full left-0 right-0 mt-0 mx-4 my-2 p-4 bg-black/50 backdrop-blur-sm border border-white/20 rounded-lg z-40 shadow-lg max-h-80 overflow-y-auto pointer-events-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-xs font-semibold text-white/80">Commands</span>
-                  <button
-                    onClick={() => {
-                      // console.log('[UI] Close button clicked');
-                      setIsCommandsExpanded(false);
-                    }}
-                    className="text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-white/60 transition-colors"
-                  >
-                    Toggle: Ctrl+Shift+?
-                  </button>
-                </div>
-                <Commands view="initial" isMinimal={true} />
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
       </div>
       {/* Chat History */}
       <ScrollArea className="flex-1 px-4 py-4 min-h-0">
@@ -518,7 +448,6 @@ export default function Chat({ setView }: ChatProps) {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            onFocus={() => window.electronAPI.setInteractiveMouseEvents?.().catch(() => {})}
             placeholder="Type your message... (Shift+Enter for new line)"
             disabled={isLoading || showApiKeyPrompt}
             className="flex-1 resize-none bg-white/5 border border-white/20 text-white px-3 py-2 rounded max-h-24 focus:outline-none focus:border-white/40"
@@ -569,6 +498,12 @@ export default function Chat({ setView }: ChatProps) {
           </motion.div>
         )}
       </div>
+
+      {/* Settings Overlay */}
+      <SettingsPanel 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
     </div>
   );
 }
