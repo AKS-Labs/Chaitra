@@ -65,7 +65,8 @@ export class ShortcutsHelper {
           mainWindow.setOpacity(1);
           
           console.log("EMERGENCY: Setting always on top");
-          mainWindow.setAlwaysOnTop(true, "floating");
+          const level = process.platform === "win32" ? "screen-saver" : "floating";
+          mainWindow.setAlwaysOnTop(true, level as any, 1);
           
           // Check if window has valid dimensions
           const bounds = mainWindow.getBounds();

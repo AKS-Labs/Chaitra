@@ -88,7 +88,7 @@ function restoreWindowState(windowState: WindowState): boolean {
       showWindowWithoutFocus();
     }
     state.mainWindow.setOpacity(windowState.opacity);
-    state.mainWindow.setAlwaysOnTop(windowState.alwaysOnTop, "floating");
+    state.mainWindow.setAlwaysOnTop(windowState.alwaysOnTop, (process.platform === "win32" ? "screen-saver" : "floating"));
     return true;
   } catch (error) {
     console.error("Failed to restore window state:", error);
@@ -389,7 +389,7 @@ function applyInteractivityState(): void {
       state.mainWindow.setIgnoreMouseEvents(false);
       state.mainWindow.setFocusable(true);
       state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setAlwaysOnTop(true, "floating");
+      state.mainWindow.setAlwaysOnTop(true, (process.platform === "win32" ? "screen-saver" : "floating"), 1);
       return;
     }
 
@@ -415,7 +415,7 @@ function applyInteractivityState(): void {
       state.mainWindow.setIgnoreMouseEvents(false);
       state.mainWindow.setFocusable(true);
       state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setAlwaysOnTop(true, "floating");
+      state.mainWindow.setAlwaysOnTop(true, (process.platform === "win32" ? "screen-saver" : "floating"), 1);
     }
   } catch (error) {
     console.error("[Interactivity] Failed to apply state:", error);
@@ -1146,14 +1146,10 @@ function createWindow(): BrowserWindow {
                          state.view === "response" || 
                          state.view === "followup";
     if (shouldBeInert && state.mainWindow && !state.mainWindow.isDestroyed()) {
-      // Immediately blur to prevent focus stealing
-      state.mainWindow.blur();
-      // Aggressively re-apply state
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setSkipTaskbar(true);
-      state.mainWindow.setFocusable(false);
-      state.mainWindow.setFocusable(false);
-      state.mainWindow.setIgnoreMouseEvents(true);
+      // Log focus event but don't immediately blur if we want to stay visible on fullscreen
+      console.log("[Focus] Window focused in inert mode. Maintaining visibility.");
+      // Instead of immediate blur, just ensure always on top is reapplied
+      state.mainWindow.setAlwaysOnTop(true, (process.platform === "win32" ? "screen-saver" : "floating"), 1);
       applyInteractivityState();
     } else if (state.mainWindow && !state.mainWindow.isDestroyed()) {
       // Even for non-inert views, ensure we don't steal focus unnecessarily
