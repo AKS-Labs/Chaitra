@@ -2,11 +2,12 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { MarkdownSection } from "@/components/shared/MarkdownSection";
-import SettingsPanel from "./SettingsPanel";
 import ChaitraLogo from "../../../assets/icons/phantomlens_logo.svg";
+import SettingsPanel from "./SettingsPanel";
+import HistoryPanel from "./HistoryPanel";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Settings, Info } from "lucide-react";
+import { Settings, Info, MessageSquarePlus, History, Trash2 } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -30,6 +31,9 @@ export default function Chat({ setView }: ChatProps) {
   const [transparencyMode, setTransparencyMode] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [sessionId, setSessionId] = useState<string>(`session-${Date.now()}`);
+  const [history, setHistory] = useState<any[]>([]);
   
   // Track listener registration
   const listenersRef = useRef({
@@ -57,6 +61,61 @@ export default function Chat({ setView }: ChatProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Load history on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const storedHistory = await window.electronAPI.getStoreValue("chat-history");
+        if (storedHistory && Array.isArray(storedHistory)) {
+          setHistory(storedHistory);
+          // Load the latest session if it exists but messages is empty
+          if (storedHistory.length > 0 && messages.length === 0) {
+            // Option: auto-load latest? Maybe not, keep it fresh.
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load history:", err);
+      }
+    };
+    loadHistory();
+  }, []);
+
+  // Save current session to history whenever messages change
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    const saveToHistory = async () => {
+      const firstMessage = messages.find(m => m.role === 'user')?.content || "Untitled Chat";
+      const title = firstMessage.length > 30 ? firstMessage.substring(0, 30) + "..." : firstMessage;
+      
+      const sessionData = {
+        id: sessionId,
+        title,
+        messages,
+        lastUpdated: Date.now()
+      };
+
+      setHistory(prev => {
+        const index = prev.findIndex(s => s.id === sessionId);
+        let newHistory;
+        if (index >= 0) {
+          newHistory = [...prev];
+          newHistory[index] = sessionData;
+        } else {
+          newHistory = [sessionData, ...prev];
+        }
+        
+        // Persist to store (limit to 20 sessions for performance)
+        const trimmedHistory = newHistory.slice(0, 20);
+        window.electronAPI.setStoreValue("chat-history", trimmedHistory);
+        return trimmedHistory;
+      });
+    };
+
+    const timer = setTimeout(saveToHistory, 2000); // Debounced save
+    return () => clearTimeout(timer);
+  }, [messages, sessionId]);
 
   // Handle streaming responses
   useEffect(() => {
@@ -259,24 +318,66 @@ export default function Chat({ setView }: ChatProps) {
     }
   };
 
+  const startNewChat = useCallback(() => {
+    if (messages.length > 0) {
+      setMessages([]);
+      setSessionId(`session-${Date.now()}`);
+      setError(null);
+    }
+  }, [messages]);
+
+  const loadSession = useCallback((session: any) => {
+    setSessionId(session.id);
+    setMessages(session.messages);
+    setIsHistoryOpen(false);
+    setError(null);
+  }, []);
+
+  const deleteSession = useCallback(async (id: string) => {
+    setHistory(prev => {
+      const newHistory = prev.filter(s => s.id !== id);
+      window.electronAPI.setStoreValue("chat-history", newHistory);
+      return newHistory;
+    });
+    // If deleted current session, start new one
+    if (id === sessionId) {
+      setMessages([]);
+      setSessionId(`session-${Date.now()}`);
+    }
+  }, [sessionId]);
+
   return (
     <div className={`relative flex flex-col h-screen bg-transparent transition-all duration-700 ${transparencyMode ? 'opacity-30' : 'opacity-100'} overflow-hidden`}>
       {/* Compact Shortcuts Bar */}
       <div className="relative z-20 border-b border-white/5 bg-black/10 backdrop-blur-2xl px-4 py-1 pointer-events-auto">
-        <div className="flex items-center gap-4">
-          {/* Settings Trigger */}
-          <div className="flex-shrink-0">
+        <div className="flex items-center gap-2">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1.5 group bg-white/5 rounded-xl p-0.5 border border-white/5">
+            <button
+              onClick={startNewChat}
+              className="p-1.5 rounded-lg hover:bg-emerald-500/10 text-white/80 hover:text-emerald-400 transition-all"
+              title="New Chat"
+            >
+              <MessageSquarePlus className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setIsHistoryOpen(true)}
+              className="p-1.5 rounded-lg hover:bg-blue-500/10 text-white/80 hover:text-blue-400 transition-all"
+              title="Chat History"
+            >
+              <History className="w-5 h-5" />
+            </button>
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="p-1 rounded-md hover:bg-white/10 text-white/70 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-all transform hover:rotate-90 duration-500"
               title="Settings (Ctrl + ,)"
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-5 h-5" />
             </button>
           </div>
 
           {/* Vertical Divider */}
-          <div className="w-px h-4 bg-white/10 flex-shrink-0" />
+          <div className="w-px h-4 bg-white/10 flex-shrink-0 mx-1" />
 
           {/* Horizontal Scrollable Shortcuts */}
           <div className="flex-1 overflow-x-auto no-scrollbar py-0.5">
@@ -512,6 +613,16 @@ export default function Chat({ setView }: ChatProps) {
       <SettingsPanel 
         isOpen={isSettingsOpen} 
         onClose={() => setIsSettingsOpen(false)} 
+      />
+
+      {/* History Overlay */}
+      <HistoryPanel
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        sessions={history}
+        currentSessionId={sessionId}
+        onSelect={loadSession}
+        onDelete={deleteSession}
       />
     </div>
   );

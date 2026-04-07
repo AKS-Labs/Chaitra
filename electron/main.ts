@@ -709,31 +709,19 @@ function createWindow(): BrowserWindow {
   // CRITICAL: Set skipTaskbar IMMEDIATELY after window creation, before ANY other operations
   // This must be the FIRST thing we do to prevent taskbar from appearing even for milliseconds
   if (state.mainWindow && !state.mainWindow.isDestroyed()) {
-    // Synchronous calls - do this BEFORE anything else
     state.mainWindow.setSkipTaskbar(true);
-    state.mainWindow.setSkipTaskbar(true);
-    state.mainWindow.setSkipTaskbar(true);
-    state.mainWindow.setSkipTaskbar(true);
-    state.mainWindow.setFocusable(false);
-    state.mainWindow.setFocusable(false);
-    state.mainWindow.setFocusable(false);
+    state.mainWindow.setFocusable(true);
     
-    // Use process.nextTick to set it even before the event loop continues
+    // Ensure skipTaskbar is set on next ticks too
     process.nextTick(() => {
       if (state.mainWindow && !state.mainWindow.isDestroyed()) {
         state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setFocusable(false);
-        state.mainWindow.setFocusable(false);
       }
     });
     
-    // Also use setImmediate for next event loop tick
     setImmediate(() => {
       if (state.mainWindow && !state.mainWindow.isDestroyed()) {
         state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setSkipTaskbar(true);
-        state.mainWindow.setFocusable(false);
       }
     });
   }
@@ -779,7 +767,7 @@ function createWindow(): BrowserWindow {
   if (app.isPackaged) {
     state.mainWindow.loadFile(path.join(__dirname, "../index.html"));
   } else {
-    state.mainWindow.loadURL("http://127.0.0.1:3333");
+    state.mainWindow.loadURL("http://127.0.0.1:3000");
   }
   
   state.mainWindow.setContentProtection(true);

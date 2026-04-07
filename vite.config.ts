@@ -38,8 +38,8 @@ export default defineConfig({
     ]),
   ],
   server: {
-    port: 3333,
-    strictPort: false,
+    port: 3000,
+    strictPort: true,
     host: "127.0.0.1",
     watch: {
       usePolling: true,
