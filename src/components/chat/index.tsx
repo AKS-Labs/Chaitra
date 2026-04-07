@@ -160,7 +160,16 @@ export default function Chat({ setView }: ChatProps) {
     const cleanup = window.electronAPI.onOpenSettings?.(() => {
       setIsSettingsOpen(prev => !prev);
     });
-    return () => cleanup?.();
+    
+    // Transparency handle
+    const cleanupTrans = window.electronAPI.onToggleTransparency?.(() => {
+      setTransparencyMode(prev => !prev);
+    });
+
+    return () => {
+      cleanup?.();
+      cleanupTrans?.();
+    };
   }, []);
 
   const sendMessage = useCallback(async () => {
@@ -251,9 +260,9 @@ export default function Chat({ setView }: ChatProps) {
   };
 
   return (
-    <div className="relative flex flex-col h-screen bg-transparent overflow-hidden">
+    <div className={`relative flex flex-col h-screen bg-transparent transition-all duration-700 ${transparencyMode ? 'opacity-30' : 'opacity-100'} overflow-hidden`}>
       {/* Compact Shortcuts Bar */}
-      <div className="relative z-20 border-b border-white/10 bg-black/40 backdrop-blur-md px-4 py-0.5 pointer-events-auto">
+      <div className="relative z-20 border-b border-white/5 bg-black/10 backdrop-blur-2xl px-4 py-1 pointer-events-auto">
         <div className="flex items-center gap-4">
           {/* Settings Trigger */}
           <div className="flex-shrink-0">

@@ -690,9 +690,9 @@ function createWindow(): BrowserWindow {
     fullscreenable: false,
     hasShadow: false,
     backgroundColor: "#00000000",
-    focusable: false, // CRITICAL: Start as non-focusable to prevent focus stealing
+    focusable: true, // Allow focus for typing when needed
     skipTaskbar: true,
-    type: process.platform === "darwin" ? "panel" : "toolbar", // Use different types for better screenshot exclusion
+    type: "toolbar", // Hides from Alt-Tab effectively on Windows
     paintWhenInitiallyHidden: false,
     titleBarStyle: "hidden",
     enableLargerThanScreen: false,
@@ -813,12 +813,16 @@ function createWindow(): BrowserWindow {
 
   state.mainWindow.on("move", handleWindowMove);
   state.mainWindow.on("resize", handleWindowResize);
-  state.mainWindow.on("closed", handleWindowClosed);
-
-  const bounds = state.mainWindow.getBounds();
-  state.windowPosition = { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
-  state.windowSize = { width: bounds.width, height: bounds.height };
-  state.isWindowVisible = true;
+    state.mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+    state.mainWindow.setContentProtection(true);
+    state.mainWindow.setSkipTaskbar(true);
+    state.mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    
+    // Ensure window position is set correctly
+    const bounds = state.mainWindow.getBounds();
+    state.windowPosition = { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height };
+    state.windowSize = { width: bounds.width, height: bounds.height };
+    state.isWindowVisible = true;
 
   console.log(`[FIXED] Window created: ${bounds.width}x${bounds.height}`);
 
@@ -987,6 +991,18 @@ async function initializeApp() {
     } catch (error) {
       console.error("Global shortcut registration failed:", error);
     }
+
+    // Handle transparency toggle from shortcuts
+    ipcMain.on("toggle-transparency", () => {
+      if (state.mainWindow && !state.mainWindow.isDestroyed()) {
+        state.mainWindow.webContents.send("toggle-transparency");
+      }
+    });
+
+    // Handle focus stealing prevention
+    state.mainWindow.on("blur", () => {
+      // Logic removed to restore full interactivity
+    });
   } catch (error) {
     console.error("Error initializing app:", error);
   }
