@@ -260,6 +260,49 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
     }
   }, "open-update-download"));
 
+
+  // ============================================================================
+  // Clipboard Neural Archive Handlers
+  // ============================================================================
+  ipcMain.handle("get-clipboard-history", createSafeIpcHandler(async () => {
+    try {
+      const history = await getStoreValue("clipboard-history") || [];
+      return { success: true, data: history };
+    } catch (error: any) {
+      console.error("Error getting clipboard history:", error);
+      return { success: false, error: error.message };
+    }
+  }, "get-clipboard-history"));
+
+  ipcMain.handle("delete-clipboard-item", createSafeIpcHandler(async (_event: any, id: string) => {
+    try {
+      let history = await getStoreValue("clipboard-history") || [];
+      history = history.filter((item: any) => item.id !== id);
+      await setStoreValue("clipboard-history", history);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error deleting clipboard item:", error);
+      return { success: false, error: error.message };
+    }
+  }, "delete-clipboard-item"));
+
+  ipcMain.handle("simulate-bypass-type", createSafeIpcHandler(async (_event: any, text: string) => {
+    try {
+      const main = require("./main");
+      if (main.default?.state?.clipboardHelper || main.state?.clipboardHelper) {
+         // Assuming state belongs to the module, but wait...
+         // Actually better to get it from deps, or since ClipboardHelper uses exec, just instantiate here for a static call
+      }
+      const helper = require("./ClipboardHelper");
+      const tempHelper = new helper.ClipboardHelper(() => deps.getMainWindow());
+      const success = await tempHelper.simulateBypassType(text);
+      return { success };
+    } catch (error: any) {
+      console.error("Error simulating bypass type:", error);
+      return { success: false, error: error.message };
+    }
+  }, "simulate-bypass-type"));
+
   // ============================================================================
   // Screenshot Management Handlers
   // ============================================================================

@@ -124,6 +124,10 @@ interface ElectronAPI {
     success: boolean;
     error?: string;
   }>;
+  getClipboardHistory: () => Promise<{ success: boolean; data?: any[]; error?: string }>;
+  deleteClipboardItem: (id: string) => Promise<{ success: boolean; error?: string }>;
+  simulateBypassType: (text: string) => Promise<{ success: boolean; error?: string }>;
+  onClipboardUpdate: (callback: (data: any[]) => void) => () => void;
 }
 
 export const PROCESSING_EVENTS = {
@@ -380,6 +384,17 @@ const electronAPI = {
     ipcRenderer.invoke("set-stats-server-endpoint", endpoint),
   getStatsServerEndpoint: () => ipcRenderer.invoke("get-stats-server-endpoint"),
   resetAppOpenCount: () => ipcRenderer.invoke("reset-app-open-count"),
+
+  getClipboardHistory: () => ipcRenderer.invoke("get-clipboard-history"),
+  deleteClipboardItem: (id: string) => ipcRenderer.invoke("delete-clipboard-item", id),
+  simulateBypassType: (text: string) => ipcRenderer.invoke("simulate-bypass-type", text),
+  onClipboardUpdate: (callback: (data: any[]) => void) => {
+    const subscription = (_: any, data: any[]) => callback(data);
+    ipcRenderer.on("clipboard-update", subscription);
+    return () => {
+      ipcRenderer.removeListener("clipboard-update", subscription);
+    };
+  },
 } as ElectronAPI;
 
 // Before exposing the API

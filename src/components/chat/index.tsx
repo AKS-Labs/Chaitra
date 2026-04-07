@@ -5,9 +5,10 @@ import { MarkdownSection } from "@/components/shared/MarkdownSection";
 import ChaitraLogo from "../../../assets/icons/phantomlens_logo.svg";
 import SettingsPanel from "./SettingsPanel";
 import HistoryPanel from "./HistoryPanel";
+import ClipboardPanel from "./ClipboardPanel";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Settings, Info, MessageSquarePlus, History, Trash2 } from "lucide-react";
+import { Settings, Info, MessageSquarePlus, History, Trash2, Clipboard } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -32,8 +33,10 @@ export default function Chat({ setView }: ChatProps) {
   const [isResizing, setIsResizing] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isClipboardOpen, setIsClipboardOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string>(`session-${Date.now()}`);
   const [history, setHistory] = useState<any[]>([]);
+  const [clipboardHistory, setClipboardHistory] = useState<any[]>([]);
   
   // Track listener registration
   const listenersRef = useRef({
@@ -79,6 +82,26 @@ export default function Chat({ setView }: ChatProps) {
       }
     };
     loadHistory();
+
+    const loadClipboard = async () => {
+      try {
+        const response = await window.electronAPI.getClipboardHistory?.();
+        if (response?.success && response.data) {
+          setClipboardHistory(response.data);
+        }
+      } catch (err) {
+        console.error("Failed to load clipboard:", err);
+      }
+    };
+    loadClipboard();
+
+    const cleanupClipboard = window.electronAPI.onClipboardUpdate?.((data: any[]) => {
+      setClipboardHistory(data);
+    });
+
+    return () => {
+      cleanupClipboard?.();
+    };
   }, []);
 
   // Save current session to history whenever messages change
@@ -346,6 +369,29 @@ export default function Chat({ setView }: ChatProps) {
     }
   }, [sessionId]);
 
+  const handlePinClipboardItem = async (id: string, currentlyPinned: boolean) => {
+    try {
+      const newHistory = clipboardHistory.map(item => 
+        item.id === id ? { ...item, pinned: !currentlyPinned } : item
+      );
+      setClipboardHistory(newHistory);
+      await window.electronAPI.setStoreValue?.("clipboard-history", newHistory);
+    } catch (err) {
+      console.error("Failed to pin clipboard item", err);
+    }
+  };
+
+  const handleDeleteClipboardItem = async (id: string) => {
+    try {
+      const response = await window.electronAPI.deleteClipboardItem?.(id);
+      if (response?.success) {
+        setClipboardHistory(prev => prev.filter(item => item.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete clipboard item", err);
+    }
+  };
+
   return (
     <div className={`relative flex flex-col h-screen bg-transparent transition-all duration-700 ${transparencyMode ? 'opacity-30' : 'opacity-100'} overflow-hidden`}>
       {/* Compact Shortcuts Bar */}
@@ -366,6 +412,13 @@ export default function Chat({ setView }: ChatProps) {
               title="Chat History"
             >
               <History className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => setIsClipboardOpen(true)}
+              className="p-1.5 rounded-lg hover:bg-purple-500/10 text-white/30 hover:text-purple-400/80 transition-all font-semibold"
+              title="Neural Archive (Clipboard)"
+            >
+              <Clipboard className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setIsSettingsOpen(true)}
@@ -620,6 +673,15 @@ export default function Chat({ setView }: ChatProps) {
         currentSessionId={sessionId}
         onSelect={loadSession}
         onDelete={deleteSession}
+      />
+
+      {/* Clipboard Archive Overlay */}
+      <ClipboardPanel
+        isOpen={isClipboardOpen}
+        onClose={() => setIsClipboardOpen(false)}
+        items={clipboardHistory}
+        onPin={handlePinClipboardItem}
+        onDelete={handleDeleteClipboardItem}
       />
     </div>
   );

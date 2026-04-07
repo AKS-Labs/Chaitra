@@ -5,6 +5,7 @@ import { ScreenshotHelper } from "./ScreenshotHelper";
 import { ShortcutsHelper } from "./shortcuts";
 import { initializeIpcHandlers } from "./ipcHandlers";
 import { incrementAppOpenCounter } from "./UsageCounter";
+import { ClipboardHelper } from "./ClipboardHelper";
 import path from "path";
 
 let store: any = null;
@@ -263,6 +264,7 @@ interface State {
   currentPrompt: string | null;
   history: string[];
   historyIndex: number;
+  clipboardHelper: ClipboardHelper | null;
 }
 
 const state: State = {
@@ -299,6 +301,7 @@ const state: State = {
     RESPONSE_CHUNK: "response-chunk",
     RESET: "reset",
   },
+  clipboardHelper: null,
 };
 
 // Add interfaces for helper classes
@@ -843,11 +846,7 @@ function handleWindowClosed(): void {
     dimensionUpdateTimeout = null;
   }
   
-  // Reset all dimension-related state
-  isUpdatingDimensions = false;
-  lockedResponseWidth = null;
-  lastUpdateTime = 0;
-  lastDimensions = { width: 0, height: 0 };
+  // Reset all dimension-related state (removed undeclared variables)
   
   state.mainWindow = null;
   state.isWindowVisible = false;
@@ -941,6 +940,9 @@ async function initializeApp() {
     incrementAppOpenCounter().catch((error) => {
       console.error("[Main] Failed to increment app open counter:", error);
     });
+    
+    state.clipboardHelper = new ClipboardHelper(() => state.mainWindow);
+    state.clipboardHelper.startMonitoring();
     
     initializeHelpers();
     
@@ -1066,7 +1068,6 @@ function getExtraScreenshotQueue(): string[] {
 function clearQueues(): void {
   state.screenshotHelper?.clearQueues();
   console.log("[FIXED] Clearing queues and resetting width lock");
-  lockedResponseWidth = null;
   setView("initial");
 }
 
@@ -1114,6 +1115,9 @@ app.on("before-quit", () => {
   cleanupAllFiles();
   if (state.screenCaptureHelper) {
     state.screenCaptureHelper.stopScreenCaptureProtection();
+  }
+  if (state.clipboardHelper) {
+    state.clipboardHelper.stopMonitoring();
   }
 });
 
