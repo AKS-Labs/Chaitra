@@ -129,7 +129,7 @@ export default function Response({ setView }: ResponseProps) {
       setCopyState('copied');
       setTimeout(() => setCopyState('idle'), 1500);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      // console.error('Failed to copy:', err);
     }
   };
 
@@ -149,7 +149,7 @@ export default function Response({ setView }: ResponseProps) {
         try {
           await fetchScreenshots();
         } catch (error) {
-          console.error("Error loading extra screenshots:", error);
+          // console.error("Error loading extra screenshots:", error);
         }
       }),
       window.electronAPI.onResetView(() => {
@@ -194,7 +194,7 @@ export default function Response({ setView }: ResponseProps) {
           setResponseData(null);
           queryClient.removeQueries({ queryKey: ["task_response"] });
         }
-        console.error("Processing error:", error);
+        // console.error("Processing error:", error);
       }),
       window.electronAPI.onResponseChunk((chunk: string) => {
         handleChunkUpdate(chunk);
@@ -298,7 +298,7 @@ export default function Response({ setView }: ResponseProps) {
             }
           }
         } catch (error) {
-          console.error('[CodeBlockScroll] Error:', error);
+          // console.error('[CodeBlockScroll] Error:', error);
         }
       }),
       window.electronAPI.onFollowUpStart(() => {
@@ -341,7 +341,7 @@ export default function Response({ setView }: ResponseProps) {
         updateResponseData(finalResponse);
       }),
       window.electronAPI.onFollowUpError((error: string) => {
-        console.error("[Response] Follow up error:", error);
+        // console.error("[Response] Follow up error:", error);
         setIsStreaming(false);
         setStreamedResponse("");
         if (chunkUpdateTimeoutRef.current) {
@@ -442,15 +442,7 @@ export default function Response({ setView }: ResponseProps) {
               
               <div className="flex items-center gap-2 flex-shrink-0">
                 <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">
-                  <img
-                    src={ChaitraLogo}
-                    alt="Chaitra"
-                    className="w-8 h-8"
-                    style={{
-                      opacity: isTransparent ? 0.4 : 1,
-                      transition: 'opacity 0.3s ease'
-                    }}
-                  />
+                  {/* Logo removed for stealth */}
                 </div>
                 <span className="text-sm font-medium whitespace-nowrap text-white" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
                   {errorMessage

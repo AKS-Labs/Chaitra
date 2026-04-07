@@ -45,11 +45,11 @@ export class ScreenshotHelper {
     try {
       if (!fs.existsSync(this.screenshotDir)) {
         fs.mkdirSync(this.screenshotDir, { recursive: true });
-        console.log("Created screenshot directory:", this.screenshotDir);
+        // console.log("Created screenshot directory:", this.screenshotDir);
       }
       if (!fs.existsSync(this.extraScreenshotDir)) {
         fs.mkdirSync(this.extraScreenshotDir, { recursive: true });
-        console.log("Created extra screenshot directory:", this.extraScreenshotDir);
+        // console.log("Created extra screenshot directory:", this.extraScreenshotDir);
       }
     } catch (error) {
       console.error("Error creating screenshot directories:", error);
@@ -81,9 +81,9 @@ export class ScreenshotHelper {
     return this.safeFileOperation(async () => {
       if (fs.existsSync(filePath)) {
         await fs.promises.unlink(filePath);
-        console.log("Successfully deleted file:", filePath);
+        // console.log("Successfully deleted file:", filePath);
       } else {
-        console.log("File already deleted or doesn't exist:", filePath);
+        // console.log("File already deleted or doesn't exist:", filePath);
       }
     }, `unlink ${filePath}`);
   }
@@ -96,7 +96,7 @@ export class ScreenshotHelper {
       return queue;
     }
 
-    console.log(`Cleaning up old screenshots. Queue size: ${queue.length}, Max: ${maxSize}`);
+    // console.log(`Cleaning up old screenshots. Queue size: ${queue.length}, Max: ${maxSize}`);
     
     const filesToRemove = queue.slice(0, queue.length - maxSize);
     const remainingFiles = queue.slice(queue.length - maxSize);
@@ -110,7 +110,7 @@ export class ScreenshotHelper {
 
     await Promise.all(deletePromises);
     
-    console.log(`Cleaned up ${filesToRemove.length} old screenshots`);
+    // console.log(`Cleaned up ${filesToRemove.length} old screenshots`);
     return remainingFiles;
   }
 
@@ -189,7 +189,7 @@ export class ScreenshotHelper {
 
       await Promise.allSettled(deletePromises);
       
-      console.log(`Cleared queues: ${mainQueueFiles.length} main + ${extraQueueFiles.length} extra screenshots`);
+      // console.log(`Cleared queues: ${mainQueueFiles.length} main + ${extraQueueFiles.length} extra screenshots`);
     } catch (error) {
       console.error("Error clearing queues:", error);
     } finally {
@@ -250,7 +250,7 @@ export class ScreenshotHelper {
           // Verify the file was actually created
           if (fs.existsSync(tmpPath)) {
             captured = true;
-            console.log(`Linux screenshot captured using: ${tool.cmd}`);
+            // console.log(`Linux screenshot captured using: ${tool.cmd}`);
             break;
           }
         } catch {
@@ -285,7 +285,7 @@ export class ScreenshotHelper {
       // Small delay to ensure any UI updates are complete
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      console.log(`Taking screenshot for view: ${this.view}`);
+      // console.log(`Taking screenshot for view: ${this.view}`);
 
       // Get screenshot buffer using native methods with enhanced error handling
       let screenshotBuffer: Buffer;
@@ -320,7 +320,7 @@ export class ScreenshotHelper {
       // Save screenshot atomically
       try {
         await fs.promises.writeFile(screenshotPath, screenshotBuffer);
-        console.log(`Screenshot saved: ${screenshotPath} (${screenshotBuffer.length} bytes)`);
+        // console.log(`Screenshot saved: ${screenshotPath} (${screenshotBuffer.length} bytes)`);
       } catch (writeError) {
         console.error("Failed to write screenshot file:", writeError);
         throw new Error(`Failed to save screenshot: ${writeError}`);
@@ -329,7 +329,7 @@ export class ScreenshotHelper {
       // Add to appropriate queue with atomic operation
       try {
         await this.addToQueue(screenshotPath, isExtraQueue);
-        console.log(`Screenshot added to ${isExtraQueue ? 'extra' : 'main'} queue`);
+        // console.log(`Screenshot added to ${isExtraQueue ? 'extra' : 'main'} queue`);
       } catch (queueError) {
         // If queue operation fails, clean up the file
         try {
@@ -370,7 +370,7 @@ export class ScreenshotHelper {
       );
 
       await Promise.all(deletePromises);
-      console.log(`Cleared extra queue: ${extraQueueFiles.length} screenshots`);
+      // console.log(`Cleared extra queue: ${extraQueueFiles.length} screenshots`);
     } finally {
       this.isProcessingQueue = false;
     }
@@ -380,17 +380,17 @@ export class ScreenshotHelper {
   // BUG FIX: Enhanced Cleanup with Comprehensive Error Handling
   // ============================================================================
   public async cleanupAllScreenshots(): Promise<void> {
-    console.log("Starting comprehensive screenshot cleanup...");
+    // console.log("Starting comprehensive screenshot cleanup...");
 
     // Wait for any pending operations to complete
     if (this.pendingOperations.size > 0) {
-      console.log(`Waiting for ${this.pendingOperations.size} pending operations to complete...`);
+      // console.log(`Waiting for ${this.pendingOperations.size} pending operations to complete...`);
       await Promise.allSettled(Array.from(this.pendingOperations));
     }
 
     // Wait for queue processing to complete
     if (this.isProcessingQueue || this.isCapturingScreenshot) {
-      console.log("Waiting for screenshot operations to complete...");
+      // console.log("Waiting for screenshot operations to complete...");
       await new Promise(resolve => setTimeout(resolve, 500));
     }
 
@@ -406,7 +406,7 @@ export class ScreenshotHelper {
 
       await Promise.allSettled(cleanupPromises);
       
-      console.log("Comprehensive screenshot cleanup completed");
+      // console.log("Comprehensive screenshot cleanup completed");
     } catch (error) {
       console.error("Error during comprehensive cleanup:", error);
     }
@@ -415,7 +415,7 @@ export class ScreenshotHelper {
   private async cleanupDirectory(dirPath: string, dirType: string): Promise<void> {
     try {
       if (!fs.existsSync(dirPath)) {
-        console.log(`${dirType} directory doesn't exist: ${dirPath}`);
+        // console.log(`${dirType} directory doesn't exist: ${dirPath}`);
         return;
       }
 
@@ -425,24 +425,24 @@ export class ScreenshotHelper {
       );
 
       if (screenshotFiles.length === 0) {
-        console.log(`No screenshots found in ${dirType} directory`);
+        // console.log(`No screenshots found in ${dirType} directory`);
         return;
       }
 
-      console.log(`Cleaning up ${screenshotFiles.length} files from ${dirType} directory`);
+      // console.log(`Cleaning up ${screenshotFiles.length} files from ${dirType} directory`);
 
       const deletePromises = screenshotFiles.map(async (file) => {
         const filePath = path.join(dirPath, file);
         try {
           await fs.promises.unlink(filePath);
-          console.log(`Deleted ${dirType} screenshot: ${file}`);
+          // console.log(`Deleted ${dirType} screenshot: ${file}`);
         } catch (error) {
           console.error(`Error deleting ${dirType} screenshot file ${filePath}:`, error);
         }
       });
 
       await Promise.allSettled(deletePromises);
-      console.log(`Finished cleaning ${dirType} directory: ${dirPath}`);
+      // console.log(`Finished cleaning ${dirType} directory: ${dirPath}`);
       
     } catch (error) {
       console.error(`Error cleaning up ${dirType} directory ${dirPath}:`, error);
@@ -453,7 +453,7 @@ export class ScreenshotHelper {
   // BUG FIX: Safe Destruction Method
   // ============================================================================
   public async destroy(): Promise<void> {
-    console.log("ScreenshotHelper destroy called");
+    // console.log("ScreenshotHelper destroy called");
     
     // Set flags to prevent new operations
     this.isCapturingScreenshot = true;
@@ -462,14 +462,14 @@ export class ScreenshotHelper {
     try {
       // Wait for pending operations
       if (this.pendingOperations.size > 0) {
-        console.log("Waiting for pending operations during destroy...");
+        // console.log("Waiting for pending operations during destroy...");
         await Promise.allSettled(Array.from(this.pendingOperations));
       }
 
       // Clean up all screenshots
       await this.cleanupAllScreenshots();
       
-      console.log("ScreenshotHelper destroyed successfully");
+      // console.log("ScreenshotHelper destroyed successfully");
     } catch (error) {
       console.error("Error during ScreenshotHelper destruction:", error);
     }

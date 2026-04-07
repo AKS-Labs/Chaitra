@@ -57,7 +57,7 @@ function createSafeIpcHandler<T extends any[], R>(
 // ============================================================================
 
 export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
-  console.log("FIXED: Initializing IPC handlers with DIRECT dimension updates (NO BATCHING)");
+  // console.log("FIXED: Initializing IPC handlers with DIRECT dimension updates (NO BATCHING)");
 
   // ============================================================================
   // API Configuration Handlers
@@ -134,7 +134,7 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
         mainWindow.webContents.send("api-key-updated");
       }
 
-      console.log(`API configuration saved: Model=${model.trim()}`);
+      // console.log(`API configuration saved: Model=${model.trim()}`);
       return { success: true, data: { apiKey: "***", model: model.trim() } };
       
     } catch (error: any) {
@@ -265,7 +265,7 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
   // ============================================================================
   ipcMain.handle("get-screenshot-queue", createIpcHandler(() => {
     const queue = deps.getScreenshotQueue();
-    console.log(`Retrieved screenshot queue: ${queue.length} items`);
+    // console.log(`Retrieved screenshot queue: ${queue.length} items`);
     return queue;
   }, "get-screenshot-queue"));
 
@@ -288,7 +288,7 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
 
       const previews = queue.map(path => ({ path }));
 
-      console.log(`Retrieved ${previews.length} screenshots for view: ${currentView}`);
+      // console.log(`Retrieved ${previews.length} screenshots for view: ${currentView}`);
       return { 
         success: true, 
         data: { previews, view: currentView } 
@@ -319,7 +319,7 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
         path: screenshotPath,
       });
 
-      console.log(`Screenshot captured and sent to UI: ${screenshotPath}`);
+      // console.log(`Screenshot captured and sent to UI: ${screenshotPath}`);
       return { success: true, data: { path: screenshotPath } };
     } catch (error: any) {
       console.error("Error triggering screenshot:", error);
@@ -354,7 +354,7 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
 
     try {
       await deps.processingHelper.processScreenshots();
-      console.log("Screenshot processing initiated successfully");
+      // console.log("Screenshot processing initiated successfully");
       return { success: true, data: "Processing started" };
     } catch (error: any) {
       console.error("Error processing screenshots:", error);

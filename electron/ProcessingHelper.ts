@@ -84,7 +84,7 @@ export class ProcessingHelper {
 
   public async processScreenshots(): Promise<void> {
     if (this.isCurrentlyProcessing) {
-      console.log("Processing already in progress. Skipping duplicate call.");
+      // console.log("Processing already in progress. Skipping duplicate call.");
       return;
     }
 
@@ -194,14 +194,14 @@ export class ProcessingHelper {
               normalizedError.includes("resource exhausted") ||
               normalizedError.includes("too many requests");
 
-            console.log("Processing failed:", errorMessage);
+            // console.log("Processing failed:", errorMessage);
 
             if (isApiKeyError) {
               mainWindow.webContents.send(
                 this.deps.PROCESSING_EVENTS.INITIAL_RESPONSE_ERROR,
                 "API key not found. Please set your API key in settings."
               );
-              console.log("Resetting view to queue due to API key error");
+              // console.log("Resetting view to queue due to API key error");
               this.deps.setView("initial");
             } else {
               mainWindow.webContents.send(
@@ -210,12 +210,12 @@ export class ProcessingHelper {
               );
 
               if (isRateLimitError) {
-                console.log(
-                  "Rate limit encountered. Keeping response view active for retry."
-                );
+                // console.log(
+                //   "Rate limit encountered. Keeping response view active for retry."
+                // );
                 this.deps.setView("response");
               } else {
-                console.log("Resetting view to queue due to error");
+                // console.log("Resetting view to queue due to error");
                 this.deps.setView("initial");
               }
             }
@@ -223,7 +223,7 @@ export class ProcessingHelper {
           }
 
           // Only set view to response if processing succeeded
-          console.log("Setting view to response after successful processing");
+          // console.log("Setting view to response after successful processing");
           // Save to local history (main export)
           try {
             const main = require("./main");
@@ -246,7 +246,7 @@ export class ProcessingHelper {
             );
           }
           // Reset view back to queue on error
-          console.log("Resetting view to queue due to error");
+          // console.log("Resetting view to queue due to error");
           this.deps.setView("initial");
         } finally {
           this.currentProcessingAbortController = null;
@@ -422,9 +422,9 @@ export class ProcessingHelper {
 
       // Prepare content parts array starting with images
       const contentParts = [...imageParts];
-      console.log(
-        `[PROCESSING] Images added to contentParts: ${imageParts.length}`
-      );
+      // console.log(
+      //   `[PROCESSING] Images added to contentParts: ${imageParts.length}`
+      // );
 
       const promptLines = [
         `You are an expert assistant tasked with solving the task shown in the images.`,
@@ -529,7 +529,7 @@ export class ProcessingHelper {
 
       // If we already sent chunks, don't reset the view - the UI already has partial content
       if (chunksSent) {
-        console.log("Chunks were already sent - not resetting view, allowing partial response to display");
+        // console.log("Chunks were already sent - not resetting view, allowing partial response to display");
         // Send final chunk with whatever we have
         if (mainWindow && !mainWindow.isDestroyed() && accumulatedText) {
           mainWindow.webContents.send(this.deps.PROCESSING_EVENTS.RESPONSE_SUCCESS, { response: accumulatedText });
@@ -585,7 +585,7 @@ export class ProcessingHelper {
             "Server error during response generation. Please try again."
         );
       }
-      console.log("Resetting view to queue due to response generation error (no chunks sent)");
+      // console.log("Resetting view to queue due to response generation error (no chunks sent)");
       this.deps.setView("initial");
       return {
         success: false,
@@ -842,7 +842,7 @@ export class ProcessingHelper {
   }
 
   public cancelProcessing(): void {
-    console.log("Canceling processing...");
+    // console.log("Canceling processing...");
     this.cancelOngoingRequests();
   }
 
@@ -859,7 +859,7 @@ export class ProcessingHelper {
   // ============================================================================
   public async processChatMessage(message: string): Promise<void> {
     if (this.isCurrentlyProcessing) {
-      console.log("Processing already in progress. Skipping chat message call.");
+      // console.log("Processing already in progress. Skipping chat message call.");
       return;
     }
 
@@ -892,7 +892,7 @@ export class ProcessingHelper {
         : model;
       const geminiModel = gemini.getGenerativeModel({ model: geminiModelId });
 
-      console.log("[CHAT] Starting stream with model:", geminiModelId);
+      // console.log("[CHAT] Starting stream with model:", geminiModelId);
 
       // Send stream of response
       let accumulatedText = "";
@@ -910,21 +910,21 @@ export class ProcessingHelper {
 
         // Send chunk to UI
         if (mainWindow && !mainWindow.isDestroyed()) {
-          console.log(`[CHAT] Sending chunk ${chunkCount}: ${accumulatedText.length} chars`);
+          // console.log(`[CHAT] Sending chunk ${chunkCount}: ${accumulatedText.length} chars`);
           mainWindow.webContents.send(
             this.deps.PROCESSING_EVENTS.RESPONSE_CHUNK,
             { response: accumulatedText }
           );
         }
       }
-      console.log(`[CHAT] Stream complete. Total chunks: ${chunkCount}, Total length: ${accumulatedText.length}`);
+      // console.log(`[CHAT] Stream complete. Total chunks: ${chunkCount}, Total length: ${accumulatedText.length}`);
 
       // Store as previous response for context
       this.previousResponse = accumulatedText;
 
       // Send final success message
       if (mainWindow && !mainWindow.isDestroyed()) {
-        console.log("[CHAT] Sending RESPONSE_SUCCESS event");
+        // console.log("[CHAT] Sending RESPONSE_SUCCESS event");
         mainWindow.webContents.send(
           this.deps.PROCESSING_EVENTS.RESPONSE_SUCCESS,
           { response: accumulatedText }
@@ -966,7 +966,7 @@ export class ProcessingHelper {
   // ============================================================================
   public async processFollowUp(): Promise<void> {
     if (this.isCurrentlyProcessing) {
-      console.log("Processing already in progress. Skipping follow-up call.");
+      // console.log("Processing already in progress. Skipping follow-up call.");
       return;
     }
 

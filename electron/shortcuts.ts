@@ -12,12 +12,12 @@ export class ShortcutsHelper {
     this.shortcuts = {
       // NEW: Capture screenshot and analyze - Ctrl/Cmd + Shift + S
       "CommandOrControl+Shift+S": async () => {
-        console.log("Command/Ctrl + Shift + S pressed. Capturing and analyzing screenshot...");
+        // console.log("Command/Ctrl + Shift + S pressed. Capturing and analyzing screenshot...");
         await this.deps.takeScreenshot();
         await this.deps.processingHelper?.processScreenshots();
       },
       "CommandOrControl+R": () => {
-        console.log("Command + R pressed. Canceling requests and resetting...");
+        // console.log("Command + R pressed. Canceling requests and resetting...");
         this.deps.processingHelper?.cancelOngoingRequests();
         this.deps.clearQueues();
         console.log("Cleared queues.");
@@ -117,7 +117,7 @@ export class ShortcutsHelper {
       },
       // Toggle Settings window (open/close)
       "CommandOrControl+,": () => {
-        console.log("Command/Ctrl + , pressed. Toggling settings...");
+        // console.log("Command/Ctrl + , pressed. Toggling settings...");
         const mainWindow = this.deps.getMainWindow();
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send("open-settings");
@@ -233,7 +233,7 @@ export class ShortcutsHelper {
       }
       const success = globalShortcut.register(key, handler);
       if (success) {
-        console.log(`✓ Registered shortcut: ${key}${isCritical ? ' (critical)' : ''}`);
+        // console.log(`✓ Registered shortcut: ${key}${isCritical ? ' (critical)' : ''}`);
       } else {
         console.error(`✗ Failed to register shortcut: ${key} (may be in use by another app)`);
         if (isCritical) {

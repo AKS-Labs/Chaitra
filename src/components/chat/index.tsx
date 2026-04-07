@@ -43,8 +43,7 @@ export default function Chat({ setView }: ChatProps) {
   const resizeRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    console.log('🟣 [LIFECYCLE] Chat component mounted');
-    return () => console.log('🟣 [LIFECYCLE] Chat component unmounted');
+    return () => {};
   }, []);
 
   // Auto-scroll to bottom when new messages arrive
@@ -61,11 +60,11 @@ export default function Chat({ setView }: ChatProps) {
   // Handle streaming responses
   useEffect(() => {
     const handleResponseChunk = (data: { response: string }) => {
-      console.log('🔵 [CHUNK-FIRED] Response chunk received:', { length: data.response.length, preview: data.response.substring(0, 50) });
+      // console.log('🔵 [CHUNK-FIRED] Response chunk received:', { length: data.response.length, preview: data.response.substring(0, 50) });
       setMessages((prev) => {
-        console.log('🔵 [CHUNK-STATE] Current messages count:', prev.length);
+        // console.log('🔵 [CHUNK-STATE] Current messages count:', prev.length);
         const lastMessage = prev[prev.length - 1];
-        console.log('🔵 [CHUNK-STATE] Last message:', { role: lastMessage?.role, id: lastMessage?.id });
+        // console.log('🔵 [CHUNK-STATE] Last message:', { role: lastMessage?.role, id: lastMessage?.id });
         if (lastMessage?.role === 'assistant') {
           const updated = [
             ...prev.slice(0, -1),
@@ -74,22 +73,22 @@ export default function Chat({ setView }: ChatProps) {
               content: data.response,
             },
           ];
-          console.log('🔵 [CHUNK-STATE] ✅ Updating assistant message with content length:', data.response.length);
+          // console.log('🔵 [CHUNK-STATE] ✅ Updating assistant message with content length:', data.response.length);
           return updated;
         }
-        console.log('🔵 [CHUNK-STATE] ❌ Last message is NOT assistant, skipping update');
+        // console.log('🔵 [CHUNK-STATE] ❌ Last message is NOT assistant, skipping update');
         return prev;
       });
       scrollToBottom();
     };
 
-    console.log('🟢 [LISTENER] Registering onResponseChunk listener');
+    // console.log('🟢 [LISTENER] Registering onResponseChunk listener');
     const cleanup = window.electronAPI.onResponseChunk?.(handleResponseChunk);
     listenersRef.current.chunk = true;
-    console.log('🟢 [LISTENER] onResponseChunk listener registered:', typeof cleanup);
+    // console.log('🟢 [LISTENER] onResponseChunk listener registered:', typeof cleanup);
     
     return () => {
-      console.log('🟡 [CLEANUP] Removing onResponseChunk listener');
+      // console.log('🟡 [CLEANUP] Removing onResponseChunk listener');
       listenersRef.current.chunk = false;
       cleanup?.();
     };
@@ -97,18 +96,18 @@ export default function Chat({ setView }: ChatProps) {
 
   // Handle response completion
   useEffect(() => {
-    console.log('🟢 [LISTENER] Registering onResponseComplete listener');
+    // console.log('🟢 [LISTENER] Registering onResponseComplete listener');
     const cleanup = window.electronAPI.onResponseComplete?.(() => {
-      console.log('🟡 [COMPLETE-FIRED] Response complete event received - SETTING isLoading = false');
+      // console.log('🟡 [COMPLETE-FIRED] Response complete event received - SETTING isLoading = false');
       listenersRef.current.complete = true;
       setIsLoading(false);
       setTimeout(() => scrollToBottom(), 100);
     });
     listenersRef.current.complete = true;
-    console.log('🟢 [LISTENER] onResponseComplete listener registered:', typeof cleanup);
+    // console.log('🟢 [LISTENER] onResponseComplete listener registered:', typeof cleanup);
     
     return () => {
-      console.log('🟡 [CLEANUP] Removing onResponseComplete listener');
+      // console.log('🟡 [CLEANUP] Removing onResponseComplete listener');
       listenersRef.current.complete = false;
       cleanup?.();
     };
@@ -116,9 +115,9 @@ export default function Chat({ setView }: ChatProps) {
 
   // Handle errors
   useEffect(() => {
-    console.log('🟢 [LISTENER] Registering onResponseError listener');
+    // console.log('🟢 [LISTENER] Registering onResponseError listener');
     const cleanup = window.electronAPI.onResponseError?.((errorMsg: string) => {
-      console.error('🔴 [ERROR-FIRED] Response error received:', errorMsg);
+      // console.error('🔴 [ERROR-FIRED] Response error received:', errorMsg);
       setError(errorMsg);
       setIsLoading(false);
       // Remove trailing empty assistant message if present
@@ -133,7 +132,7 @@ export default function Chat({ setView }: ChatProps) {
     listenersRef.current.error = true;
     
     return () => {
-      console.log('🟡 [CLEANUP] Removing onResponseError listener');
+      // console.log('🟡 [CLEANUP] Removing onResponseError listener');
       listenersRef.current.error = false;
       cleanup?.();
     };
@@ -141,15 +140,15 @@ export default function Chat({ setView }: ChatProps) {
 
   // Handle API key missing prompt
   useEffect(() => {
-    console.log('🟢 [LISTENER] Registering onApiKeyMissing listener');
+    // console.log('🟢 [LISTENER] Registering onApiKeyMissing listener');
     const cleanup = window.electronAPI.onApiKeyMissing?.(() => {
-      console.log('🟡 [APIKEY-FIRED] API key missing - showing settings prompt');
+      // console.log('🟡 [APIKEY-FIRED] API key missing - showing settings prompt');
       setShowApiKeyPrompt(true);
     });
     listenersRef.current.apiKey = true;
     
     return () => {
-      console.log('🟡 [CLEANUP] Removing onApiKeyMissing listener');
+      // console.log('🟡 [CLEANUP] Removing onApiKeyMissing listener');
       listenersRef.current.apiKey = false;
       cleanup?.();
     };
@@ -157,11 +156,11 @@ export default function Chat({ setView }: ChatProps) {
 
   const sendMessage = useCallback(async () => {
     if (!inputValue.trim() || isLoading) {
-      console.log('⚠️ Send blocked - input empty or already loading');
+      // console.log('⚠️ Send blocked - input empty or already loading');
       return;
     }
 
-    console.log('📤 [SEND] Starting send message flow');
+    // console.log('📤 [SEND] Starting send message flow');
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -169,21 +168,21 @@ export default function Chat({ setView }: ChatProps) {
       timestamp: Date.now(),
     };
 
-    console.log('📤 [SEND] Adding user message:', userMessage);
+    // console.log('📤 [SEND] Adding user message:', userMessage);
     setMessages((prev) => {
       const updated = [...prev, userMessage];
-      console.log('📤 [SEND] Messages count after user message:', updated.length);
+      // console.log('📤 [SEND] Messages count after user message:', updated.length);
       return updated;
     });
     setInputValue("");
     setIsLoading(true);
     setError(null);
-    console.log('📤 [SEND] Set isLoading = true');
+    // console.log('📤 [SEND] Set isLoading = true');
 
     try {
-      console.log('📤 [SEND] Calling sendChatMessage:', userMessage.content);
+      // console.log('📤 [SEND] Calling sendChatMessage:', userMessage.content);
       const result = await window.electronAPI.sendChatMessage?.(userMessage.content);
-      console.log('📤 [SEND] sendChatMessage returned:', result);
+      // console.log('📤 [SEND] sendChatMessage returned:', result);
       
       if (result?.success) {
         // Add empty assistant message for streaming
@@ -193,20 +192,20 @@ export default function Chat({ setView }: ChatProps) {
           content: '',
           timestamp: Date.now(),
         };
-        console.log('📤 [SEND] Adding empty assistant message:', assistantMessage);
+        // console.log('📤 [SEND] Adding empty assistant message:', assistantMessage);
         setMessages((prev) => {
           const updated = [...prev, assistantMessage];
-          console.log('📤 [SEND] Messages count after assistant message:', updated.length);
+          // console.log('📤 [SEND] Messages count after assistant message:', updated.length);
           return updated;
         });
-        console.log('📤 [SEND] Empty assistant message added, waiting for stream...');
+        // console.log('📤 [SEND] Empty assistant message added, waiting for stream...');
       } else {
-        console.error('📤 [SEND] Send failed:', result?.error);
+        // console.error('📤 [SEND] Send failed:', result?.error);
         setError(result?.error || 'Failed to send message');
         setIsLoading(false);
       }
     } catch (err) {
-      console.error('📤 [SEND] Exception:', err);
+      // console.error('📤 [SEND] Exception:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
       setIsLoading(false);
     }
@@ -248,7 +247,7 @@ export default function Chat({ setView }: ChatProps) {
       // Ctrl+Shift+? to toggle commands panel (Shift+/ on US keyboard = ?)
       if (e.ctrlKey && e.shiftKey && (e.key === '?' || e.key === '/')) {
         e.preventDefault();
-        console.log('[KEYBOARD] Ctrl+Shift+/ pressed, toggling panel:', isCommandsExpanded);
+        // console.log('[KEYBOARD] Ctrl+Shift+/ pressed, toggling panel:', isCommandsExpanded);
         setIsCommandsExpanded(prev => !prev);
       }
     };
@@ -287,12 +286,12 @@ export default function Chat({ setView }: ChatProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => {
-                  console.log('[UI] Overlay clicked, closing panel');
+                  // console.log('[UI] Overlay clicked, closing panel');
                   setIsCommandsExpanded(false);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') {
-                    console.log('[UI] Escape pressed on overlay, closing panel');
+                    // console.log('[UI] Escape pressed on overlay, closing panel');
                     e.preventDefault();
                     setIsCommandsExpanded(false);
                   }
@@ -312,7 +311,7 @@ export default function Chat({ setView }: ChatProps) {
                   <span className="text-xs font-semibold text-white/80">Commands</span>
                   <button
                     onClick={() => {
-                      console.log('[UI] Close button clicked');
+                      // console.log('[UI] Close button clicked');
                       setIsCommandsExpanded(false);
                     }}
                     className="text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-white/60 transition-colors"
@@ -323,16 +322,12 @@ export default function Chat({ setView }: ChatProps) {
                 <Commands view="initial" isMinimal={true} />
               </motion.div>
             </>
-          )}\
+          )}
         </AnimatePresence>
       </div>
       {/* Chat History */}
       <ScrollArea className="flex-1 px-4 py-4 min-h-0">
-        {/* Debug Info */}
-        <div className="text-xs text-white/30 mb-2 p-2 bg-black/20 rounded space-y-1">
-          <div>Messages: {messages.length} | Loading: {isLoading.toString()} | Last: {messages[messages.length - 1]?.role || 'none'}</div>
-          <div>Listeners: {`Chunk:${listenersRef.current.chunk} Complete:${listenersRef.current.complete} Error:${listenersRef.current.error} ApiKey:${listenersRef.current.apiKey}`}</div>
-        </div>
+
         
         <div className="space-y-4 pr-4">
           {messages.length === 0 && !isLoading && (
@@ -341,21 +336,16 @@ export default function Chat({ setView }: ChatProps) {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center justify-center h-64 space-y-4"
             >
-              <img
-                src={ChaitraLogo}
-                alt="Chaitra Logo"
-                className="w-16 h-16 opacity-60"
-              />
               <div className="text-center">
-                <h2 className="text-lg font-semibold text-white/80 mb-2">Welcome to Chaitra Chat</h2>
-                <p className="text-sm text-white/50">Start typing to chat with the AI</p>
+                <h2 className="text-lg font-semibold text-white/90 mb-2">Welcome to Chaitra Chat</h2>
+                <p className="text-sm text-white/90">Start typing to chat with the AI</p>
               </div>
             </motion.div>
           )}
 
           <AnimatePresence mode="popLayout">
             {messages.map((message, index) => {
-              console.log(`🎨 [RENDER] Message ${index}:`, { role: message.role, contentLength: message.content.length });
+              // console.log(`🎨 [RENDER] Message ${index}:`, { role: message.role, contentLength: message.content.length });
               return (
               <motion.div
                 key={message.id}

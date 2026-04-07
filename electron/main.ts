@@ -23,10 +23,7 @@ let lastDimensions = { width: 0, height: 0 };
 let dimensionUpdateTimeout: NodeJS.Timeout | null = null;
 let interactiveOverride = false;
 
-function logDimensionUpdate(source: string, width: number | string, height: number) {
-  const timestamp = new Date().toISOString().slice(11, 23);
-  console.log(`[FIXED-${timestamp}] Direct dimension update from ${source}: ${width} x ${height}`);
-}
+
 
 // ============================================================================
 // STABLE Window State Management
@@ -638,7 +635,7 @@ function setWindowDimensions(width: number | string, height: number): void {
   // FIXED: Smart rate limiting - allow tooltip height increases but prevent rapid shifts
   const minDelay = (typeof width === "string" && width === "fixed") ? 300 : 250;
   if (now - lastUpdateTime < minDelay) {
-    console.log(`[FIXED] Rate limited - skipping update (delay: ${now - lastUpdateTime}ms, min: ${minDelay}ms)`);
+    // console.log(`[FIXED] Rate limited - skipping update (delay: ${now - lastUpdateTime}ms, min: ${minDelay}ms)`);
     return;
   }
 
@@ -647,7 +644,6 @@ function setWindowDimensions(width: number | string, height: number): void {
     return;
   }
 
-  logDimensionUpdate("setWindowDimensions", width, height);
 
   // Clear any pending updates
   if (dimensionUpdateTimeout) {
@@ -681,7 +677,7 @@ function setWindowDimensions(width: number | string, height: number): void {
         
         // Handle view-specific width logic
         if (state.view === "initial") {
-          console.log(`[FIXED] Initial view - setting width to ${numericWidth}px`);
+          // console.log(`[FIXED] Initial view - setting width to ${numericWidth}px`);
           // Clear locked width when returning to initial
           if (lockedResponseWidth !== null) {
             console.log("[FIXED] Returning to initial - clearing locked width");
@@ -1025,6 +1021,7 @@ function createWindow(): BrowserWindow {
       nodeIntegration: true,
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js"),
+      devTools: false,
       scrollBounce: false,
       backgroundThrottling: false,
     },
@@ -1093,14 +1090,21 @@ function createWindow(): BrowserWindow {
   state.mainWindow.setOpacity(1);
   state.mainWindow.webContents.setFrameRate(30);
 
+  // Disable DevTools shortcuts (F12, Ctrl+Shift+I, Cmd+Option+I)
+  state.mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i') || (input.meta && input.alt && input.key.toLowerCase() === 'i')) {
+      event.preventDefault();
+    }
+  });
+
   state.mainWindow.webContents.on("did-finish-load", () => {
-    console.log("Window finished loading");
+    // console.log("Window finished loading");
     applyInteractivityState();
   });
 
   state.mainWindow.webContents.on("did-fail-load", (event: any, errorCode: number, errorDescription: string) => {
     console.error("Window failed to load:", errorCode, errorDescription);
-    console.log("Attempting to load built files from dist...");
+    // console.log("Attempting to load built files from dist...");
     setTimeout(() => {
       if (state.mainWindow && !state.mainWindow.isDestroyed()) {
         state.mainWindow.loadFile(path.join(__dirname, "../dist/index.html"))
@@ -1111,7 +1115,7 @@ function createWindow(): BrowserWindow {
     }, 1000);
   });
   
-  console.log("Loading application...");
+  // console.log("Loading application...");
   if (app.isPackaged) {
     state.mainWindow.loadFile(path.join(__dirname, "../index.html"));
   } else {

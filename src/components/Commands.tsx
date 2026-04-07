@@ -88,7 +88,7 @@ export default function Commands({
     
     // If we already have update info, don't check again (persist it)
     if (updateInfo?.updateAvailable) {
-      console.log("[Commands] Update already shown, keeping it visible");
+      // console.log("[Commands] Update already shown, keeping it visible");
       return;
     }
     
@@ -107,7 +107,7 @@ export default function Commands({
         // Don't set to null if no update - just leave existing state
       }
     } catch (error) {
-      console.error("Error checking for updates:", error);
+      // console.error("Error checking for updates:", error);
     } finally {
       setIsCheckingUpdate(false);
     }
@@ -133,7 +133,7 @@ export default function Commands({
       try {
         await window.electronAPI?.openUpdateDownload?.(downloadUrl);
       } catch (error) {
-        console.error("Error opening update download:", error);
+        // console.error("Error opening update download:", error);
       }
     });
     return () => {
@@ -295,17 +295,9 @@ export default function Commands({
             />
           )}
 
-          {/* Chaitra logo - no container, just the logo */}
+          {/* Chaitra logo removed for stealth */}
           <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center">
-            <img 
-              src={ChaitraLogo} 
-              alt="Chaitra" 
-              className="w-full h-full object-contain"
-              style={{
-                opacity: isTransparent ? 0.4 : 1,
-                transition: 'opacity 0.3s ease'
-              }}
-            />
+            {/* Logo removed */}
           </div>
 
           {/* Enhanced Command Actions */}
@@ -544,10 +536,10 @@ export default function Commands({
                 // the callback so it can update the window dimensions properly
                 if (visible && height > 0) {
                   // Tooltip will handle the window expansion internally
-                  console.log('[Commands] Settings opened, height:', height);
+                  // console.log('[Commands] Settings opened, height:', height);
                 } else {
                   // Tooltip will handle the window reset internally
-                  console.log('[Commands] Settings closed');
+                  // console.log('[Commands] Settings closed');
                 }
               }}
             />
