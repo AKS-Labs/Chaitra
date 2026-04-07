@@ -887,12 +887,18 @@ export class ProcessingHelper {
       }
 
       const gemini = new GoogleGenerativeAI(apiKey);
-      const geminiModel = gemini.getGenerativeModel({ model });
+      const geminiModelId = model.startsWith("gemini-")
+        ? `models/${model}`
+        : model;
+      const geminiModel = gemini.getGenerativeModel({ model: geminiModelId });
+
+      console.log("[CHAT] Starting stream with model:", geminiModelId);
 
       // Send stream of response
       let accumulatedText = "";
       const result = await geminiModel.generateContentStream(message);
 
+      let chunkCount = 0;
       for await (const chunk of result.stream) {
         if (signal.aborted) {
           throw new Error("Request aborted");
@@ -900,21 +906,25 @@ export class ProcessingHelper {
 
         const chunkText = chunk.text();
         accumulatedText += chunkText;
+        chunkCount++;
 
         // Send chunk to UI
         if (mainWindow && !mainWindow.isDestroyed()) {
+          console.log(`[CHAT] Sending chunk ${chunkCount}: ${accumulatedText.length} chars`);
           mainWindow.webContents.send(
             this.deps.PROCESSING_EVENTS.RESPONSE_CHUNK,
             { response: accumulatedText }
           );
         }
       }
+      console.log(`[CHAT] Stream complete. Total chunks: ${chunkCount}, Total length: ${accumulatedText.length}`);
 
       // Store as previous response for context
       this.previousResponse = accumulatedText;
 
       // Send final success message
       if (mainWindow && !mainWindow.isDestroyed()) {
+        console.log("[CHAT] Sending RESPONSE_SUCCESS event");
         mainWindow.webContents.send(
           this.deps.PROCESSING_EVENTS.RESPONSE_SUCCESS,
           { response: accumulatedText }

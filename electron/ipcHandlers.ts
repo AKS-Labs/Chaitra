@@ -969,8 +969,10 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
         return { success: false, error: "Processing helper not available" };
       }
 
-      // Process the chat message
-      await deps.processingHelper.processChatMessage(message.trim());
+      // Process the chat message asynchronously so the frontend can receive chunks
+      deps.processingHelper.processChatMessage(message.trim()).catch((err) => {
+        console.error("Background chat message processing error:", err);
+      });
       return { success: true, data: "Message sent" };
     } catch (error: any) {
       console.error("Error processing chat message:", error);
