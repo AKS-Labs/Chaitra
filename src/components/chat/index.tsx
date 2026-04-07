@@ -352,35 +352,32 @@ export default function Chat({ setView }: ChatProps) {
       <div className="relative z-20 border-b border-white/5 bg-black/10 backdrop-blur-2xl px-4 py-1 pointer-events-auto">
         <div className="flex items-center gap-2">
           {/* Action Buttons */}
-          <div className="flex items-center gap-1.5 group bg-white/5 rounded-xl p-0.5 border border-white/5">
+          <div className="flex items-center gap-0.5 group">
             <button
               onClick={startNewChat}
-              className="p-1.5 rounded-lg hover:bg-emerald-500/10 text-white/80 hover:text-emerald-400 transition-all"
+              className="p-1.5 rounded-lg hover:bg-emerald-500/10 text-white/30 hover:text-emerald-400/80 transition-all"
               title="New Chat"
             >
-              <MessageSquarePlus className="w-5 h-5" />
+              <MessageSquarePlus className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setIsHistoryOpen(true)}
-              className="p-1.5 rounded-lg hover:bg-blue-500/10 text-white/80 hover:text-blue-400 transition-all"
+              className="p-1.5 rounded-lg hover:bg-blue-500/10 text-white/30 hover:text-blue-400/80 transition-all"
               title="Chat History"
             >
-              <History className="w-5 h-5" />
+              <History className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white transition-all transform hover:rotate-90 duration-500"
+              className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white transition-all transform hover:rotate-90 duration-500"
               title="Settings (Ctrl + ,)"
             >
-              <Settings className="w-5 h-5" />
+              <Settings className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          {/* Vertical Divider */}
-          <div className="w-px h-4 bg-white/10 flex-shrink-0 mx-1" />
-
-          {/* Horizontal Scrollable Shortcuts */}
-          <div className="flex-1 overflow-x-auto no-scrollbar py-0.5">
+          {/* Horizontal Scrollable Shortcuts - Hidden as requested */}
+          {/* <div className="flex-1 overflow-x-auto no-scrollbar py-0.5">
             <div className="flex items-center gap-1.5">
               {[
                 { keys: 'Ctrl+\\', label: 'Window' },
@@ -401,7 +398,7 @@ export default function Chat({ setView }: ChatProps) {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
         
       </div>
