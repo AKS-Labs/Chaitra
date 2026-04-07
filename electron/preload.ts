@@ -104,6 +104,7 @@ interface ElectronAPI {
   onOpenSettings: (callback: () => void) => () => void;
   onSettingsUnlock: (callback: () => void) => () => void;
   onToggleTransparency: (callback: () => void) => () => void;
+  openSettings: () => void;
   // Usage Counter
   getAppOpenCount: () => Promise<{
     success: boolean;
@@ -372,6 +373,7 @@ const electronAPI = {
       ipcRenderer.removeListener("toggle-transparency", subscription);
     };
   },
+  openSettings: () => ipcRenderer.send("open-settings-request"),
   // Usage Counter
   getAppOpenCount: () => ipcRenderer.invoke("get-app-open-count"),
   setStatsServerEndpoint: (endpoint: string) =>

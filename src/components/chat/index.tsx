@@ -6,6 +6,7 @@ import Commands from "@/components/Commands";
 import ChaitraLogo from "../../../assets/icons/phantomlens_logo.svg";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Settings, Keyboard, Info } from "lucide-react";
 
 interface ChatMessage {
   id: string;
@@ -267,13 +268,52 @@ export default function Chat({ setView }: ChatProps) {
       window.electronAPI.setInteractiveMouseEvents?.().catch(() => {});
     }}>
       {/* Compact Shortcuts Bar */}
-      <div className="relative z-20 border-b border-white/10 bg-black/30 px-4 py-2 pointer-events-auto">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs text-white/60 flex-wrap">
-            <span>Toggle: Ctrl+Shift+? • Ctrl+\ (Toggle Window) • Ctrl+Shift+S (Capture)</span>
-            <br />
-            <span className="text-white/40">Settings: Ctrl+, • Use Ctrl+Shift+? again to collapse</span>
+      <div className="relative z-20 border-b border-white/10 bg-black/40 backdrop-blur-md px-4 py-2.5 pointer-events-auto">
+        <div className="flex items-center gap-4">
+          {/* Settings Trigger */}
+          <button 
+            onClick={() => window.electronAPI.openSettings()}
+            className="flex-shrink-0 p-1.5 rounded-md hover:bg-white/10 text-white/70 transition-colors"
+            title="Settings (Ctrl + ,)"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+
+          {/* Vertical Divider */}
+          <div className="w-px h-4 bg-white/10 flex-shrink-0" />
+
+          {/* Horizontal Scrollable Shortcuts */}
+          <div className="flex-1 overflow-x-auto no-scrollbar py-0.5">
+            <div className="flex items-center gap-2">
+              {[
+                { keys: 'Ctrl+\\', label: 'Window' },
+                { keys: 'C+S+S', label: 'Capture' },
+                { keys: 'Ctrl+,', label: 'Settings' },
+                { keys: 'Ctrl+R', label: 'Reset' },
+                { keys: 'Alt+↑↓', label: 'Scroll' },
+                { keys: 'C+Arrows', label: 'Move' },
+                { keys: 'C+S+V', label: 'Glass' },
+                { keys: 'C+S+[/]', label: 'Opacity' },
+              ].map((s, i) => (
+                <div 
+                  key={i}
+                  className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/5 border border-white/10"
+                >
+                  <span className="text-[10px] font-mono text-white/50">{s.keys}</span>
+                  <span className="text-[11px] font-medium text-white/80">{s.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
+          
+          {/* Help Trigger */}
+          <button 
+            onClick={() => setIsCommandsExpanded(!isCommandsExpanded)}
+            className="flex-shrink-0 p-1.5 rounded-md hover:bg-white/10 text-white/70 transition-colors"
+            title="Toggle Help (Ctrl + Shift + /)"
+          >
+            <Keyboard className="w-4 h-4" />
+          </button>
         </div>
         
         {/* Expanded Commands Panel - Floating Overlay */}
@@ -358,7 +398,7 @@ export default function Chat({ setView }: ChatProps) {
                   className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
                     message.role === 'user'
                       ? 'bg-white/5 text-white/90 rounded-br-none border border-white/15'
-                      : 'bg-white/10 text-white/90 rounded-bl-none border border-white/20'
+                      : 'bg-white/5 text-white/90 rounded-bl-none border border-white/15'
                   }`}
                   style={{
                     wordBreak: 'break-word',

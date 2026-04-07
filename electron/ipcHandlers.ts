@@ -983,5 +983,16 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
     }
   }, "send-chat-message"));
 
+
+  // ============================================================================
+  // Settings IPC
+  // ============================================================================
+  ipcMain.on("open-settings-request", () => {
+    const mainWindow = deps.getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("open-settings");
+    }
+  });
+
   console.log("FIXED: All IPC handlers initialized successfully with DIRECT dimension updates (NO BATCHING)");
 }
