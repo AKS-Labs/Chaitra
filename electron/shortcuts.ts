@@ -326,6 +326,74 @@ export class ShortcutsHelper {
       this.registerAppShortcuts();
     }
 
+    // ── Clipboard Typing Control (always-on, work while window is hidden) ──
+    const typingShortcuts: Array<[string, () => void]> = [
+      [
+        "Alt+V",
+        () => {
+          const helper = this.deps.getClipboardHelper?.();
+          if (!helper) return;
+          const state = helper.getTypingState();
+          if (state === "IDLE") {
+            console.log("[Shortcuts] Alt+V – startTyping");
+            helper.startTyping();
+          } else if (state === "PAUSED") {
+            console.log("[Shortcuts] Alt+V – resumeTyping");
+            helper.resumeTyping();
+          }
+        },
+      ],
+      [
+        "Alt+S",
+        () => {
+          const helper = this.deps.getClipboardHelper?.();
+          if (!helper) return;
+          console.log("[Shortcuts] Alt+S – pauseTyping");
+          helper.pauseTyping();
+        },
+      ],
+      [
+        "Alt+R",
+        () => {
+          const helper = this.deps.getClipboardHelper?.();
+          if (!helper) return;
+          console.log("[Shortcuts] Alt+R – resumeTyping");
+          helper.resumeTyping();
+        },
+      ],
+      [
+        "Alt+E",
+        () => {
+          const helper = this.deps.getClipboardHelper?.();
+          if (!helper) return;
+          console.log("[Shortcuts] Alt+E – stopTyping");
+          helper.stopTyping();
+        },
+      ],
+      [
+        // Alt+Shift+V used instead of bare Shift+V to avoid breaking uppercase V globally
+        "Alt+Shift+V",
+        () => {
+          console.log("[Shortcuts] Alt+Shift+V – invoke clipboard panel");
+          this.deps.showClipboardPanel?.();
+        },
+      ],
+    ];
+
+    typingShortcuts.forEach(([key, handler]) => {
+      try {
+        if (globalShortcut.isRegistered(key)) globalShortcut.unregister(key);
+        const ok = globalShortcut.register(key, handler);
+        if (ok) {
+          console.log(`✓ Registered typing shortcut: ${key}`);
+        } else {
+          console.error(`✗ Failed to register typing shortcut: ${key}`);
+        }
+      } catch (err) {
+        console.error(`✗ Error registering ${key}:`, err);
+      }
+    });
+
     // Unregister all shortcuts when quitting
     app.on("will-quit", () => {
       try { globalShortcut.unregisterAll(); } catch {}

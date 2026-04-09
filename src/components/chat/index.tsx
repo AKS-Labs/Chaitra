@@ -248,9 +248,17 @@ export default function Chat({ setView }: ChatProps) {
       setTransparencyMode(prev => !prev);
     });
 
+    // Alt+Shift+V: open clipboard panel directly from any screen
+    const cleanupClipboardInvoke = window.electronAPI.onInvokeClipboard?.(() => {
+      setIsSettingsOpen(false);
+      setIsHistoryOpen(false);
+      setIsClipboardOpen(true);
+    });
+
     return () => {
       cleanup?.();
       cleanupTrans?.();
+      cleanupClipboardInvoke?.();
     };
   }, []);
 

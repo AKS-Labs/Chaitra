@@ -344,6 +344,8 @@ export interface IShortcutsHelperDeps {
   scrollResponseBy: (delta: number) => void;
   scrollCodeBlockBy: (delta: number) => void;
   getUserPromptValue: () => string | null;
+  getClipboardHelper: () => ClipboardHelper | null;
+  showClipboardPanel: () => void;
 }
 
 export interface initializeIpcHandlerDeps {
@@ -647,6 +649,13 @@ function initializeHelpers() {
     scrollResponseBy,
     scrollCodeBlockBy,
     getUserPromptValue: () => state.currentPrompt,
+    getClipboardHelper: () => state.clipboardHelper,
+    showClipboardPanel: () => {
+      const win = state.mainWindow;
+      if (!win || win.isDestroyed()) return;
+      if (!win.isVisible()) win.show();
+      win.webContents.send("invoke-clipboard");
+    },
   } as unknown as IShortcutsHelperDeps);
 }
 

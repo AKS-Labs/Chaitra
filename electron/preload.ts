@@ -128,6 +128,7 @@ interface ElectronAPI {
   deleteClipboardItem: (id: string) => Promise<{ success: boolean; error?: string }>;
   simulateBypassType: (text: string) => Promise<{ success: boolean; error?: string }>;
   onClipboardUpdate: (callback: (data: any[]) => void) => () => void;
+  onInvokeClipboard: (callback: () => void) => () => void;
 }
 
 export const PROCESSING_EVENTS = {
@@ -393,6 +394,13 @@ const electronAPI = {
     ipcRenderer.on("clipboard-update", subscription);
     return () => {
       ipcRenderer.removeListener("clipboard-update", subscription);
+    };
+  },
+  onInvokeClipboard: (callback: () => void) => {
+    const subscription = () => callback();
+    ipcRenderer.on("invoke-clipboard", subscription);
+    return () => {
+      ipcRenderer.removeListener("invoke-clipboard", subscription);
     };
   },
 } as ElectronAPI;
