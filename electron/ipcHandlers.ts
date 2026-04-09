@@ -262,7 +262,7 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
 
 
   // ============================================================================
-  // Clipboard Neural Archive Handlers
+  // Clipboard History Archive Handlers
   // ============================================================================
   ipcMain.handle("get-clipboard-history", createSafeIpcHandler(async () => {
     try {

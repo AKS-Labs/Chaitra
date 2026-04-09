@@ -400,6 +400,18 @@ export default function Chat({ setView }: ChatProps) {
     }
   };
 
+  const handleEditClipboardItem = async (id: string, newText: string) => {
+    try {
+      const newHistory = clipboardHistory.map(item =>
+        item.id === id ? { ...item, text: newText } : item
+      );
+      setClipboardHistory(newHistory);
+      await window.electronAPI.setStoreValue?.("clipboard-history", newHistory);
+    } catch (err) {
+      console.error("Failed to edit clipboard item", err);
+    }
+  };
+
   return (
     <div className={`relative flex flex-col h-screen bg-transparent transition-all duration-700 ${transparencyMode ? 'opacity-30' : 'opacity-100'} overflow-hidden`}>
       {/* Compact Shortcuts Bar */}
@@ -424,7 +436,7 @@ export default function Chat({ setView }: ChatProps) {
             <button
               onClick={() => setIsClipboardOpen(true)}
               className="p-1.5 rounded-lg hover:bg-purple-500/10 text-white/30 hover:text-purple-400/80 transition-all font-semibold"
-              title="Neural Archive (Clipboard)"
+              title="Chaitra Clipboard"
             >
               <Clipboard className="w-3.5 h-3.5" />
             </button>
@@ -475,8 +487,8 @@ export default function Chat({ setView }: ChatProps) {
               className="flex flex-col items-center justify-center h-64 space-y-4"
             >
               <div className="text-center">
-                <h2 className="text-lg font-semibold text-white/90 mb-2">Welcome to Chaitra Chat</h2>
-                <p className="text-sm text-white/90">Start typing to chat with the AI</p>
+                <h2 className="text-lg font-semibold text-white/90 mb-2">Namaste I am Chaitra</h2>
+                <p className="text-sm text-white/90">Start typing to chat with the Chaitra</p>
               </div>
             </motion.div>
           )}
@@ -690,6 +702,7 @@ export default function Chat({ setView }: ChatProps) {
         items={clipboardHistory}
         onPin={handlePinClipboardItem}
         onDelete={handleDeleteClipboardItem}
+        onEdit={handleEditClipboardItem}
       />
     </div>
   );
