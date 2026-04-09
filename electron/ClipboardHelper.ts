@@ -1,6 +1,6 @@
 import { clipboard, BrowserWindow } from "electron";
 import { getStoreValue, setStoreValue } from "./main";
-import { spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -19,13 +19,10 @@ export class ClipboardHelper {
   private monitorIntervalId: NodeJS.Timeout | null = null;
   private lastText: string = "";
 
-  // Stateful typing
+  // Stateful typing – single PS process approach
   private typingState: TypingState = "IDLE";
-  private textToType: string = "";
-  private charIndex: number = 0;
-  private typingInterval: NodeJS.Timeout | null = null;
-  private readonly BATCH_SIZE = 5;
-  private readonly BATCH_DELAY_MS = 80;
+  private sessionId: string = "";
+  private psProcess: ChildProcess | null = null;
 
   constructor(getMainWindow: () => BrowserWindow | null) {
     this.getMainWindow = getMainWindow;
@@ -80,38 +77,89 @@ export class ClipboardHelper {
   }
 
   /**
-   * Start typing. If text is omitted, uses the latest clipboard contents.
-   * Hides the main window and waits for user to click in any input field.
+   * Called by Alt+V or the Type button.
+   * Hides the window, waits for user to click in any input field, then types.
    */
   public async startTyping(text?: string): Promise<void> {
-    this._stopTypingInterval();
+    // Kill any active session first
+    this._killActiveSession();
 
-    this.textToType = text !== undefined ? text : (clipboard.readText() ?? "");
-    if (!this.textToType) {
-      console.warn("[ClipboardHelper] startTyping: clipboard is empty");
+    const textToType = text !== undefined ? text : (clipboard.readText() ?? "");
+    if (!textToType) {
+      console.warn("[ClipboardHelper] startTyping: nothing to type");
       return;
     }
 
-    this.charIndex = 0;
+    this.sessionId = Date.now().toString();
     this.typingState = "WAITING_FOR_CLICK";
-    console.log("[ClipboardHelper] Hiding window, waiting for click...");
 
-    // Hide window so user can focus another app
-    const mainWindow = this.getMainWindow();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.hide();
+    // --- Prevent shortcut keys leaking into overlay ---
+    const win = this.getMainWindow();
+    if (win && !win.isDestroyed()) {
+      // Blur any focused input so Alt+V keypress doesn't land in the text box
+      win.webContents.executeJavaScript("document.activeElement?.blur()").catch(() => {});
+      // Small delay so the blur executes before hide
+      await new Promise((r) => setTimeout(r, 50));
+      win.hide();
     }
 
-    // Small PS script: wait for LMB release then LMB press
-    const clickScript = `
-$sig = '[DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vkey);'
-$type = Add-Type -MemberDefinition $sig -Name Keyboard -Namespace Win32 -PassThru
-while (($type::GetAsyncKeyState(1) -band 0x8000) -ne 0) { Start-Sleep -Milliseconds 50 }
-while (($type::GetAsyncKeyState(1) -band 0x8000) -eq 0) { Start-Sleep -Milliseconds 50 }
+    const sid = this.sessionId;
+    const pauseFile = path.join(os.tmpdir(), `chaitra_pause_${sid}`);
+    const stopFile  = path.join(os.tmpdir(), `chaitra_stop_${sid}`);
+    const scriptFile = path.join(os.tmpdir(), `chaitra_type_${sid}.ps1`);
+
+    // Clean up any stale control files from a previous session
+    [pauseFile, stopFile].forEach((f) => { try { fs.unlinkSync(f); } catch {} });
+
+    const b64 = Buffer.from(textToType, "utf8").toString("base64");
+
+    // Single PowerShell script that:
+    //  1. Waits for Alt/modifier keys to be released (so Alt+V doesn't type "v")
+    //  2. Waits for the user to click somewhere (LMB)
+    //  3. Types all characters sequentially, polling pause/stop control files
+    const psScript = `
+Add-Type @"
+  using System;
+  using System.Runtime.InteropServices;
+  public class Win32Util {
+    [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vk);
+  }
+"@
+
+# 1. Wait until modifier keys (Alt=0x12, Ctrl=0x11) are released
+while (([Win32Util]::GetAsyncKeyState(0x12) -band 0x8000) -ne 0) { Start-Sleep -Milliseconds 30 }
+while (([Win32Util]::GetAsyncKeyState(0x11) -band 0x8000) -ne 0) { Start-Sleep -Milliseconds 30 }
+
+# 2. Wait until mouse button is released (covers edge case where Alt+V held)
+while (([Win32Util]::GetAsyncKeyState(1) -band 0x8000) -ne 0) { Start-Sleep -Milliseconds 30 }
+
+# 3. Wait for fresh left-click
+while (([Win32Util]::GetAsyncKeyState(1) -band 0x8000) -eq 0) { Start-Sleep -Milliseconds 30 }
+
 Start-Sleep -Milliseconds 200
+
+# 4. Type the text sequentially – check pause/stop files between every char
+$pauseFile = '${pauseFile.replace(/\\/g, "\\\\")}'
+$stopFile  = '${stopFile.replace(/\\/g, "\\\\")}'
+$text = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${b64}'))
+$wshell = New-Object -ComObject WScript.Shell
+
+foreach ($c in $text.ToCharArray()) {
+    if (Test-Path $stopFile) { break }
+    # Busy-wait while paused (Poll every 100 ms)
+    while ((Test-Path $pauseFile) -and -not (Test-Path $stopFile)) {
+        Start-Sleep -Milliseconds 100
+    }
+    if (Test-Path $stopFile) { break }
+
+    $s = $c.ToString()
+    if ('+^%~(){}[]'.Contains($s)) { $s = "{$s}" }
+    $wshell.SendKeys($s)
+    Start-Sleep -Milliseconds 25
+}
 `;
-    const tmpClick = path.join(os.tmpdir(), `chaitra_click_${Date.now()}.ps1`);
-    fs.writeFileSync(tmpClick, clickScript, "utf8");
+
+    fs.writeFileSync(scriptFile, psScript, "utf8");
 
     const ps = spawn("powershell", [
       "-NoProfile",
@@ -119,119 +167,82 @@ Start-Sleep -Milliseconds 200
       "-ExecutionPolicy",
       "Bypass",
       "-File",
-      tmpClick,
+      scriptFile,
     ]);
 
+    this.psProcess = ps;
+
     ps.on("close", () => {
-      fs.unlink(tmpClick, () => {});
-      if (this.typingState === "WAITING_FOR_CLICK") {
-        this.typingState = "TYPING";
-        console.log("[ClipboardHelper] Click detected – starting typing.");
-        this._startTypingInterval();
+      // Cleanup temp files
+      [scriptFile, pauseFile, stopFile].forEach((f) => { try { fs.unlinkSync(f); } catch {} });
+      if (this.sessionId === sid) {
+        this.typingState = "IDLE";
+        this.psProcess = null;
+        console.log("[ClipboardHelper] Typing session ended.");
       }
     });
 
     ps.on("error", (err: any) => {
-      fs.unlink(tmpClick, () => {});
-      console.error("[ClipboardHelper] Click watcher error:", err);
-      this.typingState = "IDLE";
+      [scriptFile, pauseFile, stopFile].forEach((f) => { try { fs.unlinkSync(f); } catch {} });
+      console.error("[ClipboardHelper] PS error:", err);
+      if (this.sessionId === sid) {
+        this.typingState = "IDLE";
+        this.psProcess = null;
+      }
     });
+
+    // Update state to TYPING once click is detected.
+    // We approximate this by polling the pauseFile absence + process alive.
+    // In practice the state is set to TYPING right away since the PS script
+    // itself manages click waiting internally.
+    this.typingState = "TYPING";
+    console.log(`[ClipboardHelper] Waiting for click then typing ${textToType.length} chars`);
   }
 
-  /** Alt+S – pause mid-flow */
+  /** Alt+S – pause typing */
   public pauseTyping(): void {
     if (this.typingState !== "TYPING") return;
-    this._stopTypingInterval();
+    const pauseFile = path.join(os.tmpdir(), `chaitra_pause_${this.sessionId}`);
+    try { fs.writeFileSync(pauseFile, ""); } catch {}
     this.typingState = "PAUSED";
-    console.log(`[ClipboardHelper] Paused at char ${this.charIndex}/${this.textToType.length}`);
+    console.log("[ClipboardHelper] Typing paused.");
   }
 
-  /** Alt+R – resume from where we left off */
+  /** Alt+R – resume typing */
   public resumeTyping(): void {
     if (this.typingState !== "PAUSED") return;
+    const pauseFile = path.join(os.tmpdir(), `chaitra_pause_${this.sessionId}`);
+    try { fs.unlinkSync(pauseFile); } catch {}
     this.typingState = "TYPING";
-    console.log(`[ClipboardHelper] Resumed from char ${this.charIndex}/${this.textToType.length}`);
-    this._startTypingInterval();
+    console.log("[ClipboardHelper] Typing resumed.");
   }
 
-  /** Alt+E – stop completely and reset */
+  /** Alt+E – stop typing entirely */
   public stopTyping(): void {
-    this._stopTypingInterval();
-    this.typingState = "IDLE";
-    this.textToType = "";
-    this.charIndex = 0;
-    console.log("[ClipboardHelper] Typing stopped.");
+    this._killActiveSession();
+    console.log("[ClipboardHelper] Typing stopped by user.");
   }
 
-  /** Legacy single-call API kept for the ClipboardPanel "Type" button */
+  /** Legacy API for the ClipboardPanel "Type" button */
   public async simulateBypassType(text: string): Promise<boolean> {
     await this.startTyping(text);
     return true;
   }
 
-  // ─── Internal Typing Engine ───────────────────────────────────────────────
+  // ─── Internal ─────────────────────────────────────────────────────────────
 
-  private _startTypingInterval(): void {
-    if (this.typingInterval) return;
-    this.typingInterval = setInterval(() => {
-      if (this.typingState !== "TYPING") {
-        this._stopTypingInterval();
-        return;
-      }
-      if (this.charIndex >= this.textToType.length) {
-        this._stopTypingInterval();
-        this.typingState = "IDLE";
-        console.log("[ClipboardHelper] Typing complete.");
-        return;
-      }
-      const batch = this.textToType.substring(this.charIndex, this.charIndex + this.BATCH_SIZE);
-      this.charIndex += batch.length;
-      this._sendBatch(batch);
-    }, this.BATCH_DELAY_MS);
-  }
-
-  private _stopTypingInterval(): void {
-    if (this.typingInterval) {
-      clearInterval(this.typingInterval);
-      this.typingInterval = null;
+  private _killActiveSession(): void {
+    if (this.sessionId) {
+      const stopFile = path.join(os.tmpdir(), `chaitra_stop_${this.sessionId}`);
+      const pauseFile = path.join(os.tmpdir(), `chaitra_pause_${this.sessionId}`);
+      try { fs.writeFileSync(stopFile, ""); } catch {}
+      try { fs.unlinkSync(pauseFile); } catch {}
     }
-  }
-
-  private _sendBatch(batch: string): void {
-    const b64 = Buffer.from(batch, "utf8").toString("base64");
-    const script = `
-Add-Type -AssemblyName System.Windows.Forms
-$text = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("${b64}"))
-$wshell = New-Object -ComObject WScript.Shell
-foreach ($c in $text.ToCharArray()) {
-    $s = $c.ToString()
-    if ('+^%~(){}[]'.Contains($s)) { $s = "{$s}" }
-    $wshell.SendKeys($s)
-    Start-Sleep -Milliseconds 3
-}
-`;
-    const tmpPath = path.join(
-      os.tmpdir(),
-      `chaitra_batch_${Date.now()}_${Math.random().toString(36).substring(7)}.ps1`
-    );
-    try {
-      fs.writeFileSync(tmpPath, script, "utf8");
-    } catch (e) {
-      console.error("[ClipboardHelper] Failed to write batch script:", e);
-      return;
+    if (this.psProcess) {
+      try { this.psProcess.kill(); } catch {}
+      this.psProcess = null;
     }
-    const ps = spawn("powershell", [
-      "-NoProfile",
-      "-NonInteractive",
-      "-ExecutionPolicy",
-      "Bypass",
-      "-File",
-      tmpPath,
-    ]);
-    ps.on("close", () => { fs.unlink(tmpPath, () => {}); });
-    ps.on("error", (e: any) => {
-      fs.unlink(tmpPath, () => {});
-      console.error("[ClipboardHelper] Batch send error:", e);
-    });
+    this.typingState = "IDLE";
+    this.sessionId = "";
   }
 }
