@@ -69,31 +69,62 @@ export class ClipboardHelper {
       const base64Text = Buffer.from(text).toString("base64");
       
       const psScript = `
-$sig = @'
-[DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vkey);
-'@
+$sig = '[DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vkey);'
 $type = Add-Type -MemberDefinition $sig -Name Keyboard -Namespace Win32 -PassThru
 
-# Wait until Left Mouse Button (0x01) is clicked
+while (($type::GetAsyncKeyState(1) -band 0x8000) -ne 0) {
+    Start-Sleep -Milliseconds 50
+}
+
 while (($type::GetAsyncKeyState(1) -band 0x8000) -eq 0) {
     Start-Sleep -Milliseconds 50
 }
 
-# Add a tiny delay to ensure the UI field has received focus from the click
-Start-Sleep -Milliseconds 100
+Start-Sleep -Milliseconds 300
 
-Add-Type -AssemblyName System.Windows.Forms
 $decodedText = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("${base64Text}"))
-[System.Windows.Forms.SendKeys]::SendWait($decodedText)
+$wshell = New-Object -ComObject WScript.Shell
+$chars = $decodedText.ToCharArray()
+foreach ($c in $chars) {
+    $s = $c.ToString()
+    if ('+^%~(){}[]'.Contains($s)) {
+        $s = "{$s}"
+    }
+    $wshell.SendKeys($s)
+    Start-Sleep -Milliseconds 5
+}
 `;
 
-      exec(`powershell -Command "${psScript.replace(/\n/g, '; ')}"`, (error) => {
-        if (error) {
-          console.error("Bypass Type Script error:", error);
+      const { spawn } = require("child_process");
+      const fs = require("fs");
+      const path = require("path");
+      const os = require("os");
+      
+      const tmpPath = path.join(os.tmpdir(), `chaitra_type_${Date.now()}_${Math.random().toString(36).substring(7)}.ps1`);
+      
+      try {
+        fs.writeFileSync(tmpPath, psScript, "utf8");
+      } catch (err) {
+        console.error("Failed to write temporary PS script:", err);
+        return resolve(false);
+      }
+
+      const ps = spawn("powershell", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", tmpPath]);
+
+      ps.on("error", (error: any) => {
+        console.error("Bypass Type Script error:", error);
+        fs.unlink(tmpPath, () => {});
+        resolve(false);
+      });
+
+      ps.on("close", (code: number) => {
+        fs.unlink(tmpPath, () => {});
+        if (code !== 0) {
+          console.error("Bypass Type Script exited with code:", code);
           resolve(false);
-          return;
+        } else {
+          resolve(true);
         }
-        resolve(true);
       });
     });
   }

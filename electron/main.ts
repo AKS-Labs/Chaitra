@@ -370,6 +370,7 @@ export interface initializeIpcHandlerDeps {
   enableInteractiveOverride: () => void;
   disableInteractiveOverride: () => void;
   isInteractiveOverrideEnabled: () => boolean;
+  getClipboardHelper: () => ClipboardHelper | null;
 }
 
 function enableInteractiveOverride(): void {
@@ -973,6 +974,7 @@ async function initializeApp() {
       enableInteractiveOverride,
       disableInteractiveOverride,
       isInteractiveOverrideEnabled: () => false,
+      getClipboardHelper: () => state.clipboardHelper,
     });
     
     createWindow();

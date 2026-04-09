@@ -1,61 +1,73 @@
-[plugin:vite:react-babel] C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\src\components\chat\index.tsx: Unexpected token (48:2)
-  51 |   const scrollToBottom = useCallback(() => {
-C:/Users/ashin/AndroidStudioProjects/Gwenie/Chaitra/src/components/chat/index.tsx:48:2
-48 |    }, []);
-49 |  
-50 |    // Auto-scroll to bottom when new messages arrive
-   |                                        ^
-51 |    const scrollToBottom = useCallback(() => {
-52 |      setTimeout(() => {
-    at constructor (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:365:19)
-    at TypeScriptParserMixin.raise (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:6599:19)
-    at TypeScriptParserMixin.unexpected (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:6619:16)
-    at TypeScriptParserMixin.parseExprAtom (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11442:22)
-    at TypeScriptParserMixin.parseExprAtom (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:4764:20)
-    at TypeScriptParserMixin.parseExprSubscripts (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11081:23)
-    at TypeScriptParserMixin.parseUpdate (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11066:21)
-    at TypeScriptParserMixin.parseMaybeUnary (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11046:23)
-    at TypeScriptParserMixin.parseMaybeUnary (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:9837:18)
-    at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10899:61)
-    at TypeScriptParserMixin.parseExprOps (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10904:23)
-    at TypeScriptParserMixin.parseMaybeConditional (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10881:23)
-    at TypeScriptParserMixin.parseMaybeAssign (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10831:21)
-    at TypeScriptParserMixin.parseMaybeAssign (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:9786:20)
-    at TypeScriptParserMixin.parseFunctionBody (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:12093:24)
-    at TypeScriptParserMixin.parseArrowExpression (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:12075:10)
-    at TypeScriptParserMixin.parseParenAndDistinguishExpression (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11687:12)
-    at TypeScriptParserMixin.parseExprAtom (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11331:23)
-    at TypeScriptParserMixin.parseExprAtom (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:4764:20)
-    at TypeScriptParserMixin.parseExprSubscripts (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11081:23)
-    at TypeScriptParserMixin.parseUpdate (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11066:21)
-    at TypeScriptParserMixin.parseMaybeUnary (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11046:23)
-    at TypeScriptParserMixin.parseMaybeUnary (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:9837:18)
-    at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10899:61)
-    at TypeScriptParserMixin.parseExprOps (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10904:23)
-    at TypeScriptParserMixin.parseMaybeConditional (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10881:23)
-    at TypeScriptParserMixin.parseMaybeAssign (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10831:21)
-    at TypeScriptParserMixin.parseMaybeAssign (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:9786:20)
-    at TypeScriptParserMixin.parseExpressionBase (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10784:23)
-    at C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10780:39
-    at TypeScriptParserMixin.allowInAnd (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:12421:16)
-    at TypeScriptParserMixin.parseExpression (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10780:17)
-    at TypeScriptParserMixin.parseReturnStatement (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:13142:28)
-    at TypeScriptParserMixin.parseStatementContent (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:12798:21)
-    at TypeScriptParserMixin.parseStatementContent (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:9508:18)
-    at TypeScriptParserMixin.parseStatementLike (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:12767:17)
-    at TypeScriptParserMixin.parseStatementListItem (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:12747:17)
-    at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:13316:61)
-    at TypeScriptParserMixin.parseBlockBody (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:13309:10)
-    at TypeScriptParserMixin.parseBlock (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:13297:10)
-    at TypeScriptParserMixin.parseFunctionBody (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:12100:24)
-    at TypeScriptParserMixin.parseArrowExpression (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:12075:10)
-    at TypeScriptParserMixin.parseParenAndDistinguishExpression (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11687:12)
-    at TypeScriptParserMixin.parseExprAtom (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11331:23)
-    at TypeScriptParserMixin.parseExprAtom (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:4764:20)
-    at TypeScriptParserMixin.parseExprSubscripts (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11081:23)
-    at TypeScriptParserMixin.parseUpdate (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11066:21)
-    at TypeScriptParserMixin.parseMaybeUnary (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:11046:23)
-    at TypeScriptParserMixin.parseMaybeUnary (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:9837:18)
-    at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\node_modules\@babel\parser\lib\index.js:10899:61
-Click outside, press Esc key, or fix the code to dismiss.
-You can also disable this overlay by setting server.hmr.overlay to false in vite.config.ts.
+ gzip: 35.91 kB  gzip: 2.09 kB build started...
+
+build started... (x2)
+✓ 1 modules transformed.
+dist-electron/preload.js  11.24 kB │ gzip: 2.09 kB │ map: 25.21 kB
+built in 3541ms.
+✓ 32 modules transformed.
+dist-electron/main.js  192.86 kB │ gzip: 35.91 kB │ map: 368.59 kB
+built in 5299ms.
+
+Config store initialized successfully.
+API configuration loaded: Provider=gemini, Model=gemini-2.5-flash
+[Main] Using existing counter endpoint: https://phantom-counter.inulute.workers.dev
+FIXED: All IPC handlers initialized successfully with DIRECT dimension updates (NO BATCHING)
+[FIXED] Window created: 800x120
+Γ£ô Successfully registered toggle shortcut: Control+\
+[UsageCounter] Endpoint from store: https://phantom-counter.inulute.workers.dev
+[UsageCounter] Sending increment to: https://phantom-counter.inulute.workers.dev
+[UsageCounter] Fetching: https://phantom-counter.inulute.workers.dev/?t=1775733428468
+[UsageCounter] Response status: 200 OK
+[UsageCounter] Successfully sent increment to server
+[IPC-FIXED] Direct dimension request: 832 x 660
+[IPC-FIXED] Direct dimension request: 832 x 660
+[IPC-FIXED] Retrieved store value for key: chat-history
+[IPC-FIXED] Retrieved store value for key: chat-history
+Window is usable, hiding it.
+[IPC-FIXED] Window toggle requested
+Error simulating bypass type: Error: spawn ENAMETOOLONG
+    at ChildProcess.spawn (node:internal/child_process:421:11)
+    at spawn (node:child_process:776:9)
+    at Object.execFile (node:child_process:351:17)
+    at t.<computed> [as execFile] (node:electron/js2c/node_init:2:2610)
+    at Object.exec (node:child_process:234:25)
+    at Object.exec (node:electron/js2c/node_init:2:13035)
+    at C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\dist-electron\main.js:4217:21
+    at new Promise (<anonymous>)
+    at ClipboardHelper.simulateBypassType (C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\dist-electron\main.js:4189:12)
+    at C:\Users\ashin\AndroidStudioProjects\Gwenie\Chaitra\dist-electron\main.js:3670:36 {
+  errno: -4064,
+  code: 'ENAMETOOLONG',
+  syscall: 'spawn'
+}
+
+build started...
+✓ 1 modules transformed.
+dist-electron/main.js  193.09 kB │ gzip: 35.98 kB │ map: 369.05 kB
+built in 2098ms.
+
+Config store initialized successfully.
+ map: 25.21 kB
+ API configuration loaded: Provider=gemini, Model=gemini-2.5-flash
+ built in 3541ms.
+
+ ? 32 modules transformed.
+ map: 368.59 kB
+
+ built in 52
+ dist-electron/main.js  192.86 kB 
+[Main] Using existing counter endpoint: https://phantom-counter.inulute.workers.dev
+FIXED: All IPC handlers initialized successfully with DIRECT dimension updates (NO BATCHING)
+[FIXED] Window created: 800x120
+Γ£ô Successfully registered toggle shortcut: Control+\
+[UsageCounter] Endpoint from store: https://phantom-counter.inulute.workers.dev
+[UsageCounter] Sending increment to: https://phantom-counter.inulute.workers.dev
+[UsageCounter] Fetching: https://phantom-counter.inulute.workers.dev/?t=1775733534756
+[UsageCounter] Response status: 200 OK
+[UsageCounter] Successfully sent increment to server
+[IPC-FIXED] Direct dimension request: 832 x 660
+[IPC-FIXED] Direct dimension request: 832 x 660
+[IPC-FIXED] Retrieved store value for key: chat-history
+[IPC-FIXED] Retrieved store value for key: chat-history
+Window is usable, hiding it.
+[IPC-FIXED] Window toggle requested

@@ -288,14 +288,9 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
 
   ipcMain.handle("simulate-bypass-type", createSafeIpcHandler(async (_event: any, text: string) => {
     try {
-      const main = require("./main");
-      if (main.default?.state?.clipboardHelper || main.state?.clipboardHelper) {
-         // Assuming state belongs to the module, but wait...
-         // Actually better to get it from deps, or since ClipboardHelper uses exec, just instantiate here for a static call
-      }
-      const helper = require("./ClipboardHelper");
-      const tempHelper = new helper.ClipboardHelper(() => deps.getMainWindow());
-      const success = await tempHelper.simulateBypassType(text);
+      const helper = deps.getClipboardHelper?.();
+      if (!helper) throw new Error("ClipboardHelper is not initialized");
+      const success = await helper.simulateBypassType(text);
       return { success };
     } catch (error: any) {
       console.error("Error simulating bypass type:", error);
