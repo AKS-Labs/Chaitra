@@ -6,6 +6,7 @@ import { ShortcutsHelper } from "./shortcuts";
 import { initializeIpcHandlers } from "./ipcHandlers";
 import { incrementAppOpenCounter } from "./UsageCounter";
 import { ClipboardHelper } from "./ClipboardHelper";
+import { NoFocusMode } from "./NoFocusMode";
 import path from "path";
 
 let store: any = null;
@@ -265,6 +266,7 @@ interface State {
   history: string[];
   historyIndex: number;
   clipboardHelper: ClipboardHelper | null;
+  noFocusMode: NoFocusMode | null;
 }
 
 const state: State = {
@@ -302,6 +304,7 @@ const state: State = {
     RESET: "reset",
   },
   clipboardHelper: null,
+  noFocusMode: null,
 };
 
 // Add interfaces for helper classes
@@ -825,6 +828,10 @@ function createWindow(): BrowserWindow {
     state.windowSize = { width: bounds.width, height: bounds.height };
     state.isWindowVisible = true;
 
+  // Initialize NoFocusMode for Win32 focus prevention
+  state.noFocusMode = new NoFocusMode(state.mainWindow);
+  state.noFocusMode.initialize().catch(err => console.warn("NoFocusMode init warning:", err));
+
   console.log(`[FIXED] Window created: ${bounds.width}x${bounds.height}`);
 
   return state.mainWindow;
@@ -866,7 +873,7 @@ function handleWindowClosed(): void {
 }
 
 function isWindowUsable(): boolean {
-  return (
+  return !!(
     state.mainWindow &&
     !state.mainWindow.isDestroyed() &&
     state.mainWindow.isVisible()
@@ -874,6 +881,20 @@ function isWindowUsable(): boolean {
 }
 
 function toggleMainWindow(): void {
+  console.log("[Shortcuts] toggleMainWindow called");
+  
+  // Use NoFocusMode to show/hide without changing focus
+  if (state.noFocusMode) {
+    console.log("[Shortcuts] Using NoFocusMode.toggle()");
+    state.noFocusMode.toggle();
+    state.isWindowVisible = state.mainWindow?.isVisible() || false;
+    console.log("[Shortcuts] Window visible after toggle:", state.isWindowVisible);
+    return;
+  }
+  
+  console.log("[Shortcuts] NoFocusMode not available, using fallback");
+
+  // Fallback to normal toggle
   if (isWindowUsable()) {
     console.log("Window is usable, hiding it.");
     if (state.mainWindow) {
@@ -893,8 +914,12 @@ function toggleMainWindow(): void {
       state.mainWindow.setBounds(state.windowPosition);
     }
     
-    // Use helper function to show without stealing focus
-    showWindowWithoutFocus();
+    // Use NoFocusMode to show without focus
+    if (state.noFocusMode) {
+      (state.noFocusMode as any).show();
+    } else {
+      showWindowWithoutFocus();
+    }
     state.isWindowVisible = true;
   }
 }
@@ -1001,9 +1026,11 @@ async function initializeApp() {
     });
 
     // Handle focus stealing prevention
-    state.mainWindow.on("blur", () => {
-      // Logic removed to restore full interactivity
-    });
+    if (state.mainWindow && !state.mainWindow.isDestroyed()) {
+      state.mainWindow.on("blur", () => {
+        // Logic removed to restore full interactivity
+      });
+    }
   } catch (error) {
     console.error("Error initializing app:", error);
   }
