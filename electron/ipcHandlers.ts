@@ -298,6 +298,18 @@ export function initializeIpcHandlers(deps: initializeIpcHandlerDeps): void {
     }
   }, "simulate-bypass-type"));
 
+  ipcMain.handle("paste-at-cursor", createSafeIpcHandler(async (_event: any, text: string) => {
+    try {
+      const helper = deps.getClipboardHelper?.();
+      if (!helper) throw new Error("ClipboardHelper is not initialized");
+      await helper.pasteAtCursor(text);
+      return { success: true };
+    } catch (error: any) {
+      console.error("Error pasting at cursor:", error);
+      return { success: false, error: error.message };
+    }
+  }, "paste-at-cursor"));
+
   // ============================================================================
   // Screenshot Management Handlers
   // ============================================================================

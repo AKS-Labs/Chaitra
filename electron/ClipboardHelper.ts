@@ -229,7 +229,52 @@ foreach ($c in $text.ToCharArray()) {
     return true;
   }
 
-  // ─── Internal ─────────────────────────────────────────────────────────────
+  /**
+   * Paste-at-cursor: copies text to system clipboard, hides the window,
+   * waits for the user's next mouse click, then sends Ctrl+V to that field.
+   * User just needs to click where they want to paste - no manual Ctrl+V needed.
+   */
+  public async pasteAtCursor(text: string): Promise<void> {
+    // 1. Write to system clipboard
+    clipboard.writeText(text);
+
+    // 2. Blur any focused input in the overlay and hide window
+    const win = this.getMainWindow();
+    if (win && !win.isDestroyed()) {
+      win.webContents.executeJavaScript("document.activeElement?.blur()").catch(() => {});
+      await new Promise<void>((r) => setTimeout(r, 60));
+      win.hide();
+    }
+
+    // 3. PS: release modifiers, wait for fresh LMB click, send Ctrl+V
+    const psScript = `
+Add-Type @"
+  using System.Runtime.InteropServices;
+  public class Win32Util {
+    [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int vk);
+  }
+"@
+# Release held modifier keys
+while (([Win32Util]::GetAsyncKeyState(0x12) -band 0x8000) -ne 0) { Start-Sleep -Milliseconds 30 }
+while (([Win32Util]::GetAsyncKeyState(0x11) -band 0x8000) -ne 0) { Start-Sleep -Milliseconds 30 }
+# Wait for LMB release (Paste button click still held)
+while (([Win32Util]::GetAsyncKeyState(1) -band 0x8000) -ne 0) { Start-Sleep -Milliseconds 30 }
+# Wait for fresh LMB click in the target field
+while (([Win32Util]::GetAsyncKeyState(1) -band 0x8000) -eq 0) { Start-Sleep -Milliseconds 30 }
+Start-Sleep -Milliseconds 150
+\$wshell = New-Object -ComObject WScript.Shell
+\$wshell.SendKeys("^v")
+`;
+
+    const sid = Date.now().toString();
+    const tmpPath = path.join(os.tmpdir(), `chaitra_paste_${sid}.ps1`);
+    fs.writeFileSync(tmpPath, psScript, "utf8");
+    const ps = spawn("powershell", ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", tmpPath]);
+    ps.on("close", () => { try { fs.unlinkSync(tmpPath); } catch {} });
+    ps.on("error", (e: any) => { try { fs.unlinkSync(tmpPath); } catch {}; console.error("[ClipboardHelper] pasteAtCursor error:", e); });
+  }
+
+
 
   private _killActiveSession(): void {
     if (this.sessionId) {
